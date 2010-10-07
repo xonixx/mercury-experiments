@@ -20,8 +20,7 @@
 	middle_to_right;
 	done.
 
-
-step({[], [], R}, {[], [], R}, done).
+step(In @ {[], [], _}, In, done).
 step({[A|AA], [], R}, {AA, B1, R1}, M) :- 
 	( R \= [A|_] -> 
 	  B1 = [], R1 =  [A|R], M = left_to_right
