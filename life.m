@@ -105,22 +105,35 @@ neighbours(M) = sum_lst([
 	move(M, down, right)]).
 	
 m1 = [
-	[0,0,0,0],
-	[0,0,0,0],
-	[1,1,1,0],
-	[0,0,0,0]
+	[0,1,0,0,0,0,0,0,0,0],
+	[0,0,1,0,0,0,0,0,0,0],
+	[1,1,1,0,0,0,0,0,0,0],
+	[0,0,0,0,0,0,0,0,0,0],
+	[0,0,0,0,0,0,0,0,0,0],
+	[0,0,0,0,0,0,0,0,0,0],
+	[0,0,0,0,0,0,0,0,0,0],
+	[0,0,0,0,0,0,0,0,0,0],
+	[0,0,0,0,0,0,0,0,0,0]
 	].
 
 print_m([H|T]) --> print_r(H), nl, print_m(T).
 print_m([]) --> [].
 
-print_r([H | T]) --> print(H), print_r(T).
+print_r([H | T]) --> print(H=0->".";"#"), print_r(T).
 print_r([]) --> [].
 
 next(M) = or(eq(MN,3), eq(mul(M,MN),4)) :- MN = neighbours(M).
 
-main --> 
-	print_m(m1),nl,
-	print_m(neighbours(m1)),nl,
-	print_m(next(m1)).
+trace(M, N) --> (
+	{N = 0} -> []
+	;
+	print_m(M),
+	nl,
+	trace(next(M), N-1)).
+
+main -->
+	trace(m1,25).
+	%print_m(m1),nl,
+	%print_m(neighbours(m1)),nl,
+	%print_m(next(m1)).
 	%print_m(move(m1,down, left)).
