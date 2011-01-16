@@ -57,10 +57,16 @@ gen(T, N) = R :- (
 
 %:- func vert(grid, ud) = grid.
 vert(M, up) = [zeros(M)|without_last(M)].
-vert(M, down) = without_last(M) ++ [zeros(M)].
+vert(M, down) = without_first(M) ++ [zeros(M)].
 vert(M, no) = M.
 
 zeros(M) = gen(0, length(head_det(M))).
+
+without_first(L) = R :- (
+	L = [], error("without_first fail")
+	;
+	L=[_ | T], R=T
+	).
 
 %:- func without_last(list(T)) = list(T).
 without_last(L) = R :- ( 
@@ -72,7 +78,7 @@ without_last(L) = R :- (
 	).
 
 hor_row(L, left) = [0 | without_last(L)].
-hor_row(L, right) = without_last(L) ++ [0].
+hor_row(L, right) = without_first(L) ++ [0].
 hor_row(L, no) = L.
 
 :- func move(grid, ud, lr) = grid.
@@ -105,6 +111,6 @@ print_r([H | T]) --> print(H), print_r(T).
 print_r([]) --> [].
 
 main --> 
-	%print(neighbours(m1)).
 	print_m(m1),nl,
-	print_m(move(m1,down, left)).
+	print_m(neighbours(m1)).
+	%print_m(move(m1,down, left)).
