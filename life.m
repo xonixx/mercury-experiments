@@ -13,10 +13,16 @@
 
 :- type row == list(int).
 :- type grid == list(row).
-:- type sign ---> (+); (*).
+:- type sign ---> (+); (*); (\/).
 
+eq([R | RR], N) = [eq_row(R, N) | eq(RR, N)].
+eq([], _) = [].
+
+eq_row([H|T], N) = [(H=N->1;0)|eq_row(T,N)].
+eq_row([],_) = [].
 
 sum(M1, M2) = R :- R1 = agg(M1, M2, (+)) -> R = R1 ; error("can't sum").
+or(M1, M2) = R :- R1 = agg(M1, M2, (\/)) -> R = R1 ; error("can't or").
 mul(M1, M2) = R :- R1 = agg(M1, M2, (*)) -> R = R1 ; error("can't mul").
 
 sum_lst(L) = R :- (
@@ -37,6 +43,7 @@ agg_rows([], [], _) = [].
 
 agg_elts(E1, E2, (+):sign) = E1 + E2. 
 agg_elts(E1, E2, (*)) = E1 * E2. 
+agg_elts(E1, E2, (\/)) = E1 \/ E2. 
 
 :- type lr ---> left; right; no.
 :- type ud ---> up; down; no.
@@ -99,9 +106,9 @@ neighbours(M) = sum_lst([
 	
 m1 = [
 	[0,0,0,0],
-	[0,1,0,0],
+	[0,0,0,0],
 	[1,1,1,0],
-	[0,0,1,0]
+	[0,0,0,0]
 	].
 
 print_m([H|T]) --> print_r(H), nl, print_m(T).
@@ -110,7 +117,10 @@ print_m([]) --> [].
 print_r([H | T]) --> print(H), print_r(T).
 print_r([]) --> [].
 
+next(M) = or(eq(MN,3), eq(mul(M,MN),4)) :- MN = neighbours(M).
+
 main --> 
 	print_m(m1),nl,
-	print_m(neighbours(m1)).
+	print_m(neighbours(m1)),nl,
+	print_m(next(m1)).
 	%print_m(move(m1,down, left)).
