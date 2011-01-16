@@ -15,6 +15,9 @@
 :- type grid == list(row).
 :- type sign ---> (+); (*); (\/).
 
+:- type lr ---> left; right; no.
+:- type ud ---> up; down; no.
+
 eq([R | RR], N) = [eq_row(R, N) | eq(RR, N)].
 eq([], _) = [].
 
@@ -44,9 +47,6 @@ agg_rows([], [], _) = [].
 agg_elts(E1, E2, (+):sign) = E1 + E2. 
 agg_elts(E1, E2, (*)) = E1 * E2. 
 agg_elts(E1, E2, (\/)) = E1 \/ E2. 
-
-:- type lr ---> left; right; no.
-:- type ud ---> up; down; no.
 
 hor([H | T], LR) = [ hor_row(H, LR) | hor(T, LR) ].
 hor([], _) = [].
