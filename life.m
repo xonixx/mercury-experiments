@@ -13,7 +13,7 @@
 
 :- type row == list(int).
 :- type grid == list(row).
-:- type sign ---> (+); (*); (\/).
+:- type sign ---> sum; mul; or_.
 
 :- type lr ---> left; right; no.
 :- type ud ---> up; down; no.
@@ -21,12 +21,12 @@
 eq([R | RR], N) = [eq_row(R, N) | eq(RR, N)].
 eq([], _) = [].
 
-eq_row([H|T], N) = [(H=N->1;0)|eq_row(T,N)].
+eq_row([H|T], N) = [(H=N->1;0) | eq_row(T,N)].
 eq_row([],_) = [].
 
-sum(M1, M2) = R :- R1 = agg(M1, M2, (+)) -> R = R1 ; error("can't sum").
-or(M1, M2) = R :- R1 = agg(M1, M2, (\/)) -> R = R1 ; error("can't or").
-mul(M1, M2) = R :- R1 = agg(M1, M2, (*)) -> R = R1 ; error("can't mul").
+sum(M1, M2) = R :- R1 = agg(M1, M2, sum) -> R = R1 ; error("can't sum").
+or(M1, M2) = R :- R1 = agg(M1, M2, or_) -> R = R1 ; error("can't or").
+mul(M1, M2) = R :- R1 = agg(M1, M2, mul) -> R = R1 ; error("can't mul").
 
 sum_lst(L) = R :- (
 	L = [M1,M2|MM] -> R = sum_lst([sum(M1,M2)|MM])
@@ -44,11 +44,11 @@ agg([], [], _) = [].
 agg_rows([E1 | EE1], [E2 | EE2], Sign) = [agg_elts(E1, E2, Sign) | agg_rows(EE1, EE2, Sign)].
 agg_rows([], [], _) = [].
 
-agg_elts(E1, E2, (+):sign) = E1 + E2. 
-agg_elts(E1, E2, (*)) = E1 * E2. 
-agg_elts(E1, E2, (\/)) = E1 \/ E2. 
+agg_elts(E1, E2, sum) = E1 + E2. 
+agg_elts(E1, E2, mul) = E1 * E2. 
+agg_elts(E1, E2, or_) = E1 \/ E2. 
 
-hor([H | T], LR) = [ hor_row(H, LR) | hor(T, LR) ].
+hor([H | T], LR) = [hor_row(H, LR) | hor(T, LR)].
 hor([], _) = [].
 
 head_det(L) = E :- (
@@ -60,10 +60,10 @@ head_det(L) = E :- (
 gen(T, N) = R :- (
 	N=0 -> R = []
 	;
-	R = [T|gen(T,N-1)]).
+	R = [T|gen(T,N-1)]
+	).
 
-%:- func vert(grid, ud) = grid.
-vert(M, up) = [zeros(M)|without_last(M)].
+vert(M, up) = [zeros(M) | without_last(M)].
 vert(M, down) = without_first(M) ++ [zeros(M)].
 vert(M, no) = M.
 
@@ -75,7 +75,6 @@ without_first(L) = R :- (
 	L=[_ | T], R=T
 	).
 
-%:- func without_last(list(T)) = list(T).
 without_last(L) = R :- ( 
 	L=[], error("without_last fail")
 	;
@@ -102,8 +101,33 @@ neighbours(M) = sum_lst([
 
 	move(M, down, left),
 	move(M, down, no),
-	move(M, down, right)]).
-	
+	move(M, down, right)
+	]).
+
+
+%% this is GoL algorithm
+%%
+next(M) = or(eq(MN,3), eq(mul(M,MN),4)) :- MN = neighbours(M).
+
+
+%% grid pretty-print
+%%
+print_m([H|T]) --> print_r(H), nl, print_m(T).
+print_m([]) --> [].
+
+print_r([H | T]) --> print_el(H), print_r(T).
+print_r([]) --> [].
+
+print_el(H) --> print(H=0->".";"#").
+
+trace(M, N) --> (
+	{N = 0} -> []
+	;
+	print_m(M),
+	nl,
+	trace(next(M), N-1)
+	).
+
 m1 = [
 	[0,1,0,0,0,0,0,0,0,0],
 	[0,0,1,0,0,0,0,0,0,0],
@@ -116,24 +140,5 @@ m1 = [
 	[0,0,0,0,0,0,0,0,0,0]
 	].
 
-print_m([H|T]) --> print_r(H), nl, print_m(T).
-print_m([]) --> [].
-
-print_r([H | T]) --> print(H=0->".";"#"), print_r(T).
-print_r([]) --> [].
-
-next(M) = or(eq(MN,3), eq(mul(M,MN),4)) :- MN = neighbours(M).
-
-trace(M, N) --> (
-	{N = 0} -> []
-	;
-	print_m(M),
-	nl,
-	trace(next(M), N-1)).
-
 main -->
 	trace(m1,25).
-	%print_m(m1),nl,
-	%print_m(neighbours(m1)),nl,
-	%print_m(next(m1)).
-	%print_m(move(m1,down, left)).
