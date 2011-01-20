@@ -13,7 +13,7 @@
 
 :- type row == list(int).
 :- type grid == list(row).
-:- type sign ---> sum; mul; or_.
+:- type sign ---> sum_; mul_; or_.
 
 :- type lr ---> left; right; no.
 :- type ud ---> up; down; no.
@@ -24,23 +24,17 @@ eq([], _) = [].
 eq_row([H|T], N) = [(H=N->1;0) | eq_row(T,N)].
 eq_row([],_) = [].
 
-sum(M1, M2) = R :- R1 = agg(M1, M2, sum) -> R = R1 ; error("can't sum").
-or(M1, M2) = R :- R1 = agg(M1, M2, or_) -> R = R1 ; error("can't or").
-mul(M1, M2) = R :- R1 = agg(M1, M2, mul) -> R = R1 ; error("can't mul").
+sum(M1, M2) = agg(sum_, M1, M2).
+or(M1, M2) = agg(or_, M1, M2).
+mul(M1, M2) = agg(mul_, M1, M2).
 
 sum_lst(L) = foldl(sum, det_tail(L), det_head(L)).
 
-:-func agg(grid, grid, sign) = grid is semidet.
-agg([R1 | RR1], [R2 | RR2], Sign) = [agg_rows(R1, R2, Sign) | agg(RR1, RR2, Sign)].
-agg([], [], _) = [].
+agg(Sign, M1, M2) = map_corresponding(map_corresponding(agg_elts(Sign)),M1,M2).
 
-:-func agg_rows(row, row, sign) = row is semidet.
-agg_rows([E1 | EE1], [E2 | EE2], Sign) = [agg_elts(E1, E2, Sign) | agg_rows(EE1, EE2, Sign)].
-agg_rows([], [], _) = [].
-
-agg_elts(E1, E2, sum) = E1 + E2. 
-agg_elts(E1, E2, mul) = E1 * E2. 
-agg_elts(E1, E2, or_) = E1 \/ E2. 
+agg_elts(sum_, E1, E2) = E1 + E2. 
+agg_elts(mul_, E1, E2) = E1 * E2. 
+agg_elts(or_, E1, E2) = E1 \/ E2. 
 
 hor([H | T], LR) = [hor_row(H, LR) | hor(T, LR)].
 hor([], _) = [].
