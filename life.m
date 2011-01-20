@@ -29,11 +29,11 @@ or(M1, M2) = R :- R1 = agg(M1, M2, or_) -> R = R1 ; error("can't or").
 mul(M1, M2) = R :- R1 = agg(M1, M2, mul) -> R = R1 ; error("can't mul").
 
 sum_lst(L) = R :- (
-	L = [M1,M2|MM] -> R = sum_lst([sum(M1,M2)|MM])
+	L=[], error("sum_lst")
 	;
-	L=[M] -> R = M
+	L=[M], R = M
 	;
-	error("sum_lst")
+	L = [M1,M2|MM], R = sum_lst([sum(M1,M2)|MM])
 	).
 
 :-func agg(grid, grid, sign) = grid is semidet.
@@ -51,12 +51,6 @@ agg_elts(E1, E2, or_) = E1 \/ E2.
 hor([H | T], LR) = [hor_row(H, LR) | hor(T, LR)].
 hor([], _) = [].
 
-head_det(L) = E :- (
-	L = [], error("empty list")
-	;
-	L=[E1|_], E = E1
-	).
-	
 gen(T, N) = R :- (
 	N=0 -> R = []
 	;
@@ -64,16 +58,10 @@ gen(T, N) = R :- (
 	).
 
 vert(M, up) = [zeros(M) | without_last(M)].
-vert(M, down) = without_first(M) ++ [zeros(M)].
+vert(M, down) = det_tail(M) ++ [zeros(M)].
 vert(M, no) = M.
 
-zeros(M) = gen(0, length(head_det(M))).
-
-without_first(L) = R :- (
-	L = [], error("without_first fail")
-	;
-	L=[_ | T], R=T
-	).
+zeros(M) = gen(0, length(det_head(M))).
 
 without_last(L) = R :- ( 
 	L=[], error("without_last fail")
@@ -84,7 +72,7 @@ without_last(L) = R :- (
 	).
 
 hor_row(L, left) = [0 | without_last(L)].
-hor_row(L, right) = without_first(L) ++ [0].
+hor_row(L, right) = det_tail(L) ++ [0].
 hor_row(L, no) = L.
 
 :- func move(grid, ud, lr) = grid.
