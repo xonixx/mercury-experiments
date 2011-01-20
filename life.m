@@ -32,8 +32,7 @@ agg_elts(sum_, E1, E2) = E1 + E2.
 agg_elts(mul_, E1, E2) = E1 * E2. 
 agg_elts(or_, E1, E2) = E1 \/ E2. 
 
-hor([H | T], LR) = [hor_row(H, LR) | hor(T, LR)].
-hor([], _) = [].
+hor(M, LR) = map(hor_row(LR), M).
 
 gen(T, N) = R :- (
 	N=0 -> R = []
@@ -49,9 +48,9 @@ zeros(M) = gen(0, length(det_head(M))).
 
 without_last(L) = R :- det_split_last(L,R,_).
 
-hor_row(L, left) = [0 | without_last(L)].
-hor_row(L, right) = det_tail(L) ++ [0].
-hor_row(L, no) = L.
+hor_row(left, L) = [0 | without_last(L)].
+hor_row(right, L) = det_tail(L) ++ [0].
+hor_row(no, L) = L.
 
 :- func move(grid, ud, lr) = grid.
 move(M, UD, LR) = hor(vert(M, UD), LR).
