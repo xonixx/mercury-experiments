@@ -28,13 +28,7 @@ sum(M1, M2) = R :- R1 = agg(M1, M2, sum) -> R = R1 ; error("can't sum").
 or(M1, M2) = R :- R1 = agg(M1, M2, or_) -> R = R1 ; error("can't or").
 mul(M1, M2) = R :- R1 = agg(M1, M2, mul) -> R = R1 ; error("can't mul").
 
-sum_lst(L) = R :- (
-	L=[], error("sum_lst")
-	;
-	L=[M], R = M
-	;
-	L = [M1,M2|MM], R = sum_lst([sum(M1,M2)|MM])
-	).
+sum_lst(L) = foldl(sum, det_tail(L), det_head(L)).
 
 :-func agg(grid, grid, sign) = grid is semidet.
 agg([R1 | RR1], [R2 | RR2], Sign) = [agg_rows(R1, R2, Sign) | agg(RR1, RR2, Sign)].
@@ -63,13 +57,7 @@ vert(M, no) = M.
 
 zeros(M) = gen(0, length(det_head(M))).
 
-without_last(L) = R :- ( 
-	L=[], error("without_last fail")
-	;
-	L=[_], R=[]
-	;
-	L=[H,H1|T], R=[H|without_last([H1|T])]
-	).
+without_last(L) = R :- det_split_last(L,R,_).
 
 hor_row(L, left) = [0 | without_last(L)].
 hor_row(L, right) = det_tail(L) ++ [0].
