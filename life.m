@@ -18,11 +18,7 @@
 :- type lr ---> left; right; no.
 :- type ud ---> up; down; no.
 
-eq([R | RR], N) = [eq_row(R, N) | eq(RR, N)].
-eq([], _) = [].
-
-eq_row([H|T], N) = [(H=N->1;0) | eq_row(T,N)].
-eq_row([],_) = [].
+eq(M, N) = map(map(func(E)=(E=N->1;0)),M).
 
 sum(M1, M2) = agg(sum_, M1, M2).
 or(M1, M2) = agg(or_, M1, M2).
