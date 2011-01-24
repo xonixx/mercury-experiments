@@ -4,23 +4,17 @@
 
 :- import_module io.
 
-:- pred main(io.state, io.state).
-:- mode main(di, uo) is det.
+:- pred main(io::di, io::uo) is det.
 
 :- implementation.
 
-:- import_module list.
-:- import_module string.
-:- import_module int.
-:- import_module solutions.
-:- import_module set.
+:- import_module list, string, int, solutions.
 
 :- type li == list(int).
 :- type lt == list({string, int}).
 
 :- pred problem(li, int, lt,lt, string, string, string).
 :- mode problem(in, in, in,out, in, in, in) is nondet.
-
 problem(!.Nums,!.Carry,!Unif,!.Word1,!.Word2,!.Word3):-
 	(!.Word3 \= ""
 	->
@@ -35,7 +29,7 @@ problem(!.Nums,!.Carry,!Unif,!.Word1,!.Word2,!.Word3):-
 	).
 
 :- pred take_num(li,li, lt, lt, string, string, int).
-:- mode take_num(in,out, in,out, in,out, out).
+:- mode take_num(in,out, in,out, in,out, out) is nondet.
 take_num(!NN, !Unif, !Word, N) :-
 	(B = last(!.Word, !:Word)
 	->
@@ -48,7 +42,8 @@ take_num(!NN, !Unif, !Word, N) :-
 	  !.Word = "" => N \= 0, % first digit not 0
 	  !:Unif = [{B,N} | !.Unif]
 	 )
-	;N = 0, !:Word = "", !:Unif = !.Unif
+	; 
+	N = 0, !:Word = "", !:Unif = !.Unif
 	).
 
 :- func last(string,string) = string.
@@ -96,10 +91,10 @@ word_to_digits(W, U) = Res :-
 	; Res = "" 
 	).
 
-:- pred write_sols(list(lt), string,string,string,io,io).
+:- pred write_sols(list(lt), string, string, string, io, io).
 :- mode write_sols(in, in, in, in, di, uo) is det.
 write_sols([S | SS], W1,W2,W3) -->
- 	io.format("Solved:  %s+%s=%s\n", [
+ 	format("Solved:  %s+%s=%s\n", [
  					  s(word_to_digits(W1, S)),
  					  s(word_to_digits(W2, S)),
  					  s(word_to_digits(W3, S))
@@ -107,19 +102,19 @@ write_sols([S | SS], W1,W2,W3) -->
 	write_sols(SS, W1,W2,W3).
 write_sols([],_,_,_) --> [].
 
-:- pred solve(string,string,string,io.state,io.state).
+:- pred solve(string,string,string,io,io).
 :- mode solve(in,in,in,di,uo) is det.
 solve(W1, W2, W3) -->
-	io.format("Solving: %s+%s=%s\n", [s(W1), s(W2), s(W3)]),
+	format("Solving: %s+%s=%s\n", [s(W1), s(W2), s(W3)]),
 	{
-	 solutions_set((pred(Unif::out) is nondet :-
-			problem([1,2,3,4,5,6,7,8,9,0],0,[], Unif,W1,W2,W3))
-		      ,Set
+	 solutions((pred(Unif::out) is nondet :-
+			problem([1,2,3,4,5,6,7,8,9,0], 0, [], Unif, W1,W2,W3))
+		      ,L
 		      )
 	 },
-
-	write_sols(to_sorted_list(Set), W1, W2, W3).
+	write_sols(L, W1, W2, W3).
 
 main -->
 	solve("SEND", "MORE", "MONEY"),
-	solve("DONALD","GERALD","ROBERT").
+	solve("DONALD","GERALD","ROBERT"),
+	solve("GREA", "TYOU", "DIDIT").
