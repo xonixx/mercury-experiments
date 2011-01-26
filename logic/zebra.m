@@ -32,7 +32,7 @@ unify_maybe(yes(E), yes(E)) = yes(E).
 :- type maybe_list(T) == list(maybe(T)).
 :- type maybe_list_list(T) == list(maybe_list(T)).
 
-:- func unify_lists(list(T), list(T)) = list(T)  is semidet <= unifiable(T).
+:- func unify_lists(list(T), list(T)) = list(T) is semidet <= unifiable(T).
 unify_lists([], []) = [].
 unify_lists([H|T], [H1|T1]) = [unify(H, H1) | unify_lists(T, T1)].
 
@@ -44,11 +44,11 @@ unify_lists(L1, L2, unify_lists(L1, L2)).
 :- mode member(in, out, in, out) is nondet.
 member(E, E, [], []) :- fail.
 member(E0, E1, [H | T], [H1 | T1]) :- 
-	(	H0 = unify(E0, H) ->
+	(	H0 = unify(E0, H),
 		H1 = H0,
 		(	E1 = H0, T=T1
-		;
-			member(E0, E1, T, T1)
+		%;
+		%	member(E0, E1, T, T1)
 		)
 	;
 		H1 = H,
@@ -81,8 +81,8 @@ neigh(Left, Right, !List) :-
 zebraowner(!Houses, ZebraOwner) :-
 	zebra.member([yes(englishman), no, yes(red)], !Houses),
         zebra.member([yes(spanish), yes(jaguar), no], !Houses),
-        neigh([no, yes(snail), no], [yes(japanese), no, no], !Houses),
-        neigh([no, yes(snail), no], [no, no, yes(blue)], !Houses),
+        %neigh([no, yes(snail), no], [yes(japanese), no, no], !Houses),
+        %neigh([no, yes(snail), no], [no, no, yes(blue)], !Houses),
         zebra.member([no, yes(zebra), no], H, !Houses), H = [ZebraOwner,_,_],
         zebra.member([no, no, yes(green)], !Houses).
 
@@ -93,4 +93,12 @@ zebra({Houses, X}) :-
 	
 main -->
 	{ solutions(zebra, Solutions)},
-	print(Solutions).
+	%print(Solutions),
+	
+	{solutions((pred(HH1::out) is nondet :-
+		EmptyHouse=[no, no, no], HH=[EmptyHouse, EmptyHouse, EmptyHouse],
+		zebra.member([yes(englishman), no, yes(red)], HH, HH1)%,
+		%zebra.member([yes(spanish), yes(jaguar), no], HH1, HH2)
+		), 
+		L)},
+	nl, print(L).
