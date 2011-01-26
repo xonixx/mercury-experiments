@@ -8,7 +8,7 @@
 
 :- implementation.
 
-:- import_module maybe, list.
+:- import_module maybe, list, solutions.
 
 
 :- typeclass unifiable(T) where [
@@ -30,60 +30,67 @@ unify_maybe(no, no) = no.
 unify_maybe(yes(E), yes(E)) = yes(E).
 
 :- type maybe_list(T) == list(maybe(T)).
+:- type maybe_list_list(T) == list(maybe_list(T)).
 
 :- func unify_lists(list(T), list(T)) = list(T)  is semidet <= unifiable(T).
 unify_lists([], []) = [].
 unify_lists([H|T], [H1|T1]) = [unify(H, H1) | unify_lists(T, T1)].
 
-:- pred unify_lists(maybe_list(T), maybe_list(T), maybe_list(T)).
+:- pred unify_lists(list(T), list(T), list(T)) <= unifiable(T).
 :- mode unify_lists(in, in, out) is semidet.
 unify_lists(L1, L2, unify_lists(L1, L2)).
 
-:- pred member(maybe(T), maybe(T), maybe_list(T), maybe_list(T)).
-:- mode member(in, out, in, out) is semidet.
+:- pred member(T, T, list(T), list(T)) <= unifiable(T).
+:- mode member(in, out, in, out) is nondet.
 member(E, E, [], []) :- fail.
 member(E0, E1, [H | T], [H1 | T1]) :- 
 	(	H0 = unify(E0, H) ->
-		H1 = H0
+		H1 = H0,
+		(	E1 = H0, T=T1
+		;
+			member(E0, E1, T, T1)
+		)
 	;
 		H1 = H,
 		member(E0, E1, T, T1)
 	).
 	
-:- pred member(maybe(T), maybe_list(T), maybe_list(T)).
-:- mode member(in, in, out) is semidet.	
+:- pred member(T, list(T), list(T)) <= unifiable(T).
+:- mode member(in, in, out) is nondet.	
 member(E, !L) :- member(E,_,!L).	
 	
 %
 % solution
 %
 
+:- pred neigh(maybe_list(T), maybe_list(T), maybe_list_list(T), maybe_list_list(T)).
 neigh(Left, Right, !List) :- 
-        (	unify_lists([Left, Right, no], !List)
+        (	unify_lists([Left, Right, [no, no, no]], !List)
 	;
-		unify_lists([no, Left, Right], !List)
+		unify_lists([[no, no, no], Left, Right], !List)
 	).
 
-:- type people ---> englishman; spanish; japanese.
-:- type animals ---> jaguar; zebra; snail.
-:- type color ---> blue; green; red.
+%:- type people ---> englishman; spanish; japanese.
+%:- type animals ---> jaguar; zebra; snail.
+%:- type color ---> blue; green; red.
+
+:- type data ---> englishman; spanish; japanese;
+			jaguar; zebra; snail;
+			blue; green; red.
 
 zebraowner(!Houses, ZebraOwner) :-
-	member([yes(englishman), no, yes(red)], !Houses),
-        member([yes(spanish), yes(jaguar), no], !Houses),
+	zebra.member([yes(englishman), no, yes(red)], !Houses),
+        zebra.member([yes(spanish), yes(jaguar), no], !Houses),
         neigh([no, yes(snail), no], [yes(japanese), no, no], !Houses),
         neigh([no, yes(snail), no], [no, no, yes(blue)], !Houses),
-        member([no, yes(zebra), no], [ZebraOwner,_,_], !Houses),
-        member([no, no, yes(green)], !Houses).
+        zebra.member([no, yes(zebra), no], H, !Houses), H = [ZebraOwner,_,_],
+        zebra.member([no, no, yes(green)], !Houses).
 
-
+:- mode zebra(out) is nondet.
 zebra({Houses, X}) :- 
 	EmptyHouse=[no, no, no], 
 	zebraowner([EmptyHouse, EmptyHouse, EmptyHouse], Houses, X).
 	
 main -->
-	(	{ solutions(zebra, Solutions)} ->
-		print(Solutions)
-	;
-		print("no solutions")
-	).
+	{ solutions(zebra, Solutions)},
+	print(Solutions).
