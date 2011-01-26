@@ -46,10 +46,8 @@ member(E, E, [], []) :- fail.
 member(E0, E1, [H | T], [H1 | T1]) :- 
 	(	H0 = unify(E0, H),
 		H1 = H0,
-		(	E1 = H0, T=T1
-		%;
-		%	member(E0, E1, T, T1)
-		)
+		E1 = H0, 
+		T=T1
 	;
 		H1 = H,
 		member(E0, E1, T, T1)
@@ -81,8 +79,8 @@ neigh(Left, Right, !List) :-
 zebraowner(!Houses, ZebraOwner) :-
 	zebra.member([yes(englishman), no, yes(red)], !Houses),
         zebra.member([yes(spanish), yes(jaguar), no], !Houses),
-        %neigh([no, yes(snail), no], [yes(japanese), no, no], !Houses),
-        %neigh([no, yes(snail), no], [no, no, yes(blue)], !Houses),
+        neigh([no, yes(snail), no], [yes(japanese), no, no], !Houses),
+        neigh([no, yes(snail), no], [no, no, yes(blue)], !Houses),
         zebra.member([no, yes(zebra), no], H, !Houses), H = [ZebraOwner,_,_],
         zebra.member([no, no, yes(green)], !Houses).
 
@@ -93,12 +91,19 @@ zebra({Houses, X}) :-
 	
 main -->
 	{ solutions(zebra, Solutions)},
-	%print(Solutions),
+	print(Solutions),
+	
+	({Solutions = [{_,yes(P)}|_]} ->
+	nl, nl, print(P) 
+	;
+	print("noway!")
+	),
 	
 	{solutions((pred(HH1::out) is nondet :-
 		EmptyHouse=[no, no, no], HH=[EmptyHouse, EmptyHouse, EmptyHouse],
 		zebra.member([yes(englishman), no, yes(red)], HH, HH1)%,
 		%zebra.member([yes(spanish), yes(jaguar), no], HH1, HH2)
 		), 
-		L)},
-	nl, print(L).
+		L)}%,
+	%nl, print(L)
+	.
