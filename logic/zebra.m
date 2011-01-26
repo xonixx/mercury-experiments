@@ -40,6 +40,10 @@ unify_lists([H|T], [H1|T1]) = [unify(H, H1) | unify_lists(T, T1)].
 :- mode unify_lists(in, in, out) is semidet.
 unify_lists(L1, L2, unify_lists(L1, L2)).
 
+:- pred unify(T, T, T) <= unifiable(T).
+:- mode unify(in, in, out) is semidet.
+unify(A, B, unify(A, B)).
+
 :- pred member(T, T, list(T), list(T)) <= unifiable(T).
 :- mode member(in, out, in, out) is nondet.
 member(E, E, [], []) :- fail.
@@ -63,9 +67,9 @@ member(E, !L) :- member(E,_,!L).
 
 :- pred neigh(maybe_list(T), maybe_list(T), maybe_list_list(T), maybe_list_list(T)).
 neigh(Left, Right, !List) :- 
-        (	unify_lists([Left, Right, [no, no, no]], !List)
+        (	unify([Left, Right, [no, no, no]], !List)
 	;
-		unify_lists([[no, no, no], Left, Right], !List)
+		unify([[no, no, no], Left, Right], !List)
 	).
 
 %:- type people ---> englishman; spanish; japanese.
@@ -81,7 +85,7 @@ zebraowner(!Houses, ZebraOwner) :-
         zebra.member([yes(spanish), yes(jaguar), no], !Houses),
         neigh([no, yes(snail), no], [yes(japanese), no, no], !Houses),
         neigh([no, yes(snail), no], [no, no, yes(blue)], !Houses),
-        zebra.member([no, yes(zebra), no], H, !Houses), H = [ZebraOwner,_,_],
+        zebra.member([no, yes(zebra), no], [ZebraOwner|_], !Houses),
         zebra.member([no, no, yes(green)], !Houses).
 
 :- mode zebra(out) is nondet.
@@ -90,20 +94,10 @@ zebra({Houses, X}) :-
 	zebraowner([EmptyHouse, EmptyHouse, EmptyHouse], Houses, X).
 	
 main -->
-	{ solutions(zebra, Solutions)},
-	print(Solutions),
-	
-	({Solutions = [{_,yes(P)}|_]} ->
-	nl, nl, print(P) 
+	(	{ solutions(zebra, [{Houses,yes(P)}|_])} ->
+		print(Houses),
+		nl, nl,
+		print(P)
 	;
-	print("noway!")
-	),
-	
-	{solutions((pred(HH1::out) is nondet :-
-		EmptyHouse=[no, no, no], HH=[EmptyHouse, EmptyHouse, EmptyHouse],
-		zebra.member([yes(englishman), no, yes(red)], HH, HH1)%,
-		%zebra.member([yes(spanish), yes(jaguar), no], HH1, HH2)
-		), 
-		L)}%,
-	%nl, print(L)
-	.
+		print("noway!")
+	).
