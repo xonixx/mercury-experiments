@@ -4,7 +4,10 @@
 
 :- import_module list, maybe.
 
-:- typeclass unifiable(T).
+:- typeclass unifiable(T) where [
+	func unify(T, T) = T is semidet
+].
+
 :- instance unifiable(maybe(T)).
 :- instance unifiable(list(T)) <= unifiable(T).
 
@@ -24,10 +27,6 @@
 :- implementation.
 
 :- import_module maybe, list.
-
-:- typeclass unifiable(T) where [
-	func unify(T, T) = T is semidet
-].
 
 :- instance unifiable(maybe(T)) where [
 	func(unify/2) is unify_maybe

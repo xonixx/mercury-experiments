@@ -10,10 +10,6 @@
 
 :- import_module maybe, list, solutions, logic.
 	
-%
-% solution
-%
-
 :- type data ---> englishman; spanish; japanese;
 			jaguar; zebra; snail;
 			blue; green; red.
