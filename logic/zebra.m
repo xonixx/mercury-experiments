@@ -11,15 +11,27 @@
 :- import_module maybe, list.
 
 
-:- func unify(maybe(T), maybe(T)) = maybe(T) is semidet.
-unify(no, yes(E)) = yes(E).
-unify(yes(E), no) = yes(E).
-unify(no, no) = no.
-unify(yes(E), yes(E)) = yes(E).
+:- typeclass unifiable(T) where [
+	func unify(T, T) = T is semidet
+].
+
+:- instance unifiable(maybe(T)) where [
+	func(unify/2) is unify_maybe
+].
+
+:- instance unifiable(list(T)) <= unifiable(T) where [
+	func(unify/2) is unify_lists 
+].
+
+:- func unify_maybe(maybe(T), maybe(T)) = maybe(T) is semidet.
+unify_maybe(no, yes(E)) = yes(E).
+unify_maybe(yes(E), no) = yes(E).
+unify_maybe(no, no) = no.
+unify_maybe(yes(E), yes(E)) = yes(E).
 
 :- type maybe_list(T) == list(maybe(T)).
 
-:- func unify_lists(maybe_list(T), maybe_list(T)) = maybe_list(T) is semidet.
+:- func unify_lists(list(T), list(T)) = list(T)  is semidet <= unifiable(T).
 unify_lists([], []) = [].
 unify_lists([H|T], [H1|T1]) = [unify(H, H1) | unify_lists(T, T1)].
 
