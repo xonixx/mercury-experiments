@@ -14,11 +14,11 @@
 			jaguar; zebra; snail;
 			blue; green; red.
 
+unknown_house=[no,no,no].
+
 neigh(Left, Right, !List) :- 
-        (	unify([Left, Right, [no, no, no]], !List)
-	;
-		unify([[no, no, no], Left, Right], !List)
-	).
+	unify([Left, Right, unknown_house], !List);
+	unify([unknown_house, Left, Right], !List).
 
 zebraowner(!Houses, ZebraOwner) :-
 	logic.member([yes(englishman), no, yes(red)], !Houses),
@@ -30,8 +30,7 @@ zebraowner(!Houses, ZebraOwner) :-
 
 :- mode zebra(out) is nondet.
 zebra({Houses, X}) :- 
-	EmptyHouse=[no, no, no], 
-	zebraowner([EmptyHouse, EmptyHouse, EmptyHouse], Houses, X).
+	zebraowner([unknown_house, unknown_house, unknown_house], Houses, X).
 	
 main -->
 	(	{ solutions(zebra, [{Houses,yes(P)}|_])} ->
