@@ -39,5 +39,5 @@ nokill(pos(X, yes(Y)), [pos(X1, yes(Y1)) | Others]) :-
 main -->
 	{ solutions(pred(S::out) is nondet :- solve(S), L)},
 	print(L),
-	print("\nTotal solutions: "),
+	print("\n\nTotal solutions: "),
 	print(length(L):int).
