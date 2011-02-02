@@ -11,7 +11,6 @@
 :- import_module list, string, char, solutions, require, int.
 
 :- type bf_cmd ---> plus; minus; step; back; print; cycle(list(bf_cmd)).
-%:- type bf_prog == list(bf_cmd).
 
 :- type bf_state ---> bf_state(
 	left :: list(int),
@@ -19,7 +18,7 @@
 	right :: list(int)
 ).
 
-prog = "++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++\
+hello_world = "++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++\
 .>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.\
 ------.--------.>+.>.".
 	
@@ -44,12 +43,10 @@ fib_1_100 = "+++++++++++\
 prog_to_ast(Prog) = Ast :-
 	to_char_list(Prog, Chars), 
 	solutions(pred(Ast_::out) is nondet :- ast(Ast_, Chars, []:list(char)), Asts),
-	(	Asts = [], error("Program invalid!")
+	(	Asts = [], error("Program invalid (parse error)!")
 	;	Asts = [H|_], Ast = H
 	).
 
-
-%:- pred ast(bf_prog, list(char), list(char)).
 :- mode ast(out, in, out) is multi.
 ast([plus|Cmds]) --> ['+'], ast(Cmds).	
 ast([minus|Cmds]) --> ['-'], ast(Cmds).	
@@ -62,8 +59,6 @@ ast([]) --> [].
 execute([], !State) --> [].
 execute([Cmd|Cmds], !State) --> execute_cmd(Cmd, !State), execute(Cmds, !State).
 
-:- pred execute_cmd(bf_cmd, bf_state, bf_state, io, io).
-:- mode execute_cmd(in, in, out, di, uo) is det.
 execute_cmd(plus, S @ bf_state(L,C,R), bf_state(L, C+1, R)) --> [], p(S).
 execute_cmd(minus, S @ bf_state(L,C,R), bf_state(L, C-1, R)) --> [], p(S).
 execute_cmd(step, S @ bf_state(L,C,R), bf_state([C|L], H, T)) --> [], p(S), {R = [], H=0, T=[]; R = [H|T]}.
@@ -83,4 +78,7 @@ p(_) --> [].
 
 exec(Prog) --> {Ast = prog_to_ast(Prog)}, /* print(Ast), nl, nl, */ execute(Ast, bf_state([], 0, []), _).
 
-main --> exec(prog), nl, exec(squares_1_to_1000), nl, exec(fib_1_100).
+main --> 
+	exec(hello_world), nl, 
+	exec(squares_1_to_1000), nl, 
+	exec(fib_1_100).
