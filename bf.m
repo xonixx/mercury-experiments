@@ -50,7 +50,7 @@ execute_cmd(plus, S @ bf_state(L,C,R), bf_state(L, C+1, R)) --> [], p(S).
 execute_cmd(minus, S @ bf_state(L,C,R), bf_state(L, C-1, R)) --> [], p(S).
 execute_cmd(step, S @ bf_state(L,C,R), bf_state([C|L], H, T)) --> [], p(S), {R = [], H=0, T=[]; R = [H|T]}.
 execute_cmd(back, S @ bf_state(L,C,R), bf_state(T, H, [C|R])) --> [], p(S), {L = [], H=0, T=[]; L = [H|T]}.
-execute_cmd(print, S @ bf_state(_,C,_), S) --> print(C).
+execute_cmd(print, S @ bf_state(_,C,_), S) --> print(char.det_from_int(C):char).
 execute_cmd(Cmd @ cycle(Cmds), !.S @ bf_state(_,C,_), !:S) --> p(!.S), 
 	(	{C \= 0} -> 
 		execute(Cmds, !S), 
@@ -59,6 +59,6 @@ execute_cmd(Cmd @ cycle(Cmds), !.S @ bf_state(_,C,_), !:S) --> p(!.S),
 		[]
 	).
 
-p(T) --> print(T), nl.
+p(T) --> []. %print(T), nl.
 
-main --> {Ast = prog_to_ast(prog)}, print(Ast), execute(Ast, bf_state([], 0, []), _).
+main --> {Ast = prog_to_ast(prog)}, print(Ast), nl, nl, execute(Ast, bf_state([], 0, []), _).
