@@ -59,12 +59,12 @@ ast([]) --> [].
 execute([], !State) --> [].
 execute([Cmd|Cmds], !State) --> execute_cmd(Cmd, !State), execute(Cmds, !State).
 
-execute_cmd(plus, S @ bf_state(L,C,R), bf_state(L, C+1, R)) --> [], p(S).
-execute_cmd(minus, S @ bf_state(L,C,R), bf_state(L, C-1, R)) --> [], p(S).
-execute_cmd(step, S @ bf_state(L,C,R), bf_state([C|L], H, T)) --> [], p(S), {R = [], H=0, T=[]; R = [H|T]}.
-execute_cmd(back, S @ bf_state(L,C,R), bf_state(T, H, [C|R])) --> [], p(S), {L = [], H=0, T=[]; L = [H|T]}.
+execute_cmd(plus, bf_state(L,C,R), bf_state(L, C+1, R)) --> [].
+execute_cmd(minus, bf_state(L,C,R), bf_state(L, C-1, R)) --> [].
+execute_cmd(step, bf_state(L,C,R), bf_state([C|L], H, T)) --> {R = [], H=0, T=[]; R = [H|T]}.
+execute_cmd(back, bf_state(L,C,R), bf_state(T, H, [C|R])) --> {L = [], H=0, T=[]; L = [H|T]}.
 execute_cmd(print, S @ bf_state(_,C,_), S) --> print(char.det_from_int(C):char).
-execute_cmd(Cmd @ cycle(Cmds), !.S @ bf_state(_,C,_), !:S) --> p(!.S), 
+execute_cmd(Cmd @ cycle(Cmds), !.S @ bf_state(_,C,_), !:S) --> 
 	(	{C \= 0} -> 
 		execute(Cmds, !S), 
 		execute_cmd(Cmd, !S)
@@ -72,13 +72,9 @@ execute_cmd(Cmd @ cycle(Cmds), !.S @ bf_state(_,C,_), !:S) --> p(!.S),
 		[]
 	).
 
-%p(T) --> print(T), nl.
-p(_) --> [].
-
-
-exec(Prog) --> {Ast = prog_to_ast(Prog)}, /* print(Ast), nl, nl, */ execute(Ast, bf_state([], 0, []), _).
+execute_str(Prog) --> {Ast = prog_to_ast(Prog)}, execute(Ast, bf_state([], 0, []), _).
 
 main --> 
-	exec(hello_world), nl, 
-	exec(squares_1_to_1000), nl, 
-	exec(fib_1_100).
+	execute_str(hello_world), nl, 
+	execute_str(squares_1_to_1000), nl, 
+	execute_str(fib_1_100).
