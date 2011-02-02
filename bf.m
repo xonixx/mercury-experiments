@@ -44,7 +44,7 @@ prog_to_ast(Prog) = Ast :-
 	to_char_list(Prog, Chars), 
 	solutions(pred(Ast_::out) is nondet :- ast(Ast_, Chars, []:list(char)), Asts),
 	(	Asts = [], error("Program invalid (parse error)!")
-	;	Asts = [H|_], Ast = H
+	;	Asts = [Ast|_]
 	).
 
 :- mode ast(out, in, out) is multi.
