@@ -28,7 +28,7 @@ squares_1_to_1000 = "++++[>+++++<-]>[<+++++>-]+<+[\
 <<[>>>>>[>>>[-]+++++++++<[>-<-]+++++++++>[-[<->-]+[<<<]]<[>+<-]>]<<-]<<-\
 ]".
 
-fib_1_to_100 = "+++++++++++\
+fib_1_100 = "+++++++++++\
 >+>>>>++++++++++++++++++++++++++++++++++++++++++++\
 >++++++++++++++++++++++++++++++++<<<<<<[>[>>>>>>+>\
 +<<<<<<<-]>>>>>>>[<<<<<<<+>>>>>>>-]<[>++++++++++[-\
@@ -56,25 +56,29 @@ ast([print|Cmds]) --> ['.'], ast(Cmds).
 ast([cycle(Cycle)|Cmds]) --> ['['], ast(Cycle), [']'], ast(Cmds).
 ast([]) --> [].
 
-execute_ast([], !State) --> [].
-execute_ast([Cmd|Cmds], !State) --> execute_cmd(Cmd, !State), execute_ast(Cmds, !State).
+execute([], !State) --> [].
+execute([Cmd|Cmds], !State) --> execute_cmd(Cmd, !State), execute(Cmds, !State).
 
-execute_cmd(plus, bf_state(L,C,R), bf_state(L, C+1, R)) --> [].
-execute_cmd(minus, bf_state(L,C,R), bf_state(L, C-1, R)) --> [].
-execute_cmd(step, bf_state(L,C,R), bf_state([C|L], H, T)) --> {R = [], H=0, T=[]; R = [H|T]}.
-execute_cmd(back, bf_state(L,C,R), bf_state(T, H, [C|R])) --> {L = [], H=0, T=[]; L = [H|T]}.
+execute_cmd(plus, S @ bf_state(L,C,R), bf_state(L, C+1, R)) --> [], p(S).
+execute_cmd(minus, S @ bf_state(L,C,R), bf_state(L, C-1, R)) --> [], p(S).
+execute_cmd(step, S @ bf_state(L,C,R), bf_state([C|L], H, T)) --> [], p(S), {R = [], H=0, T=[]; R = [H|T]}.
+execute_cmd(back, S @ bf_state(L,C,R), bf_state(T, H, [C|R])) --> [], p(S), {L = [], H=0, T=[]; L = [H|T]}.
 execute_cmd(print, S @ bf_state(_,C,_), S) --> print(char.det_from_int(C):char).
-execute_cmd(Cmd @ cycle(Cmds), !.S @ bf_state(_,C,_), !:S) --> 
+execute_cmd(Cmd @ cycle(Cmds), !.S @ bf_state(_,C,_), !:S) --> p(!.S), 
 	(	{C \= 0} -> 
-		execute_ast(Cmds, !S), 
+		execute(Cmds, !S), 
 		execute_cmd(Cmd, !S)
 	;
 		[]
 	).
 
-execute_str(Prog) --> {Ast = prog_to_ast(Prog)}, execute_ast(Ast, bf_state([], 0, []), _).
+%p(T) --> print(T), nl.
+p(_) --> [].
+
+
+exec(Prog) --> {Ast = prog_to_ast(Prog)}, /* print(Ast), nl, nl, */ execute(Ast, bf_state([], 0, []), _).
 
 main --> 
-	execute_str(hello_world), nl, 
-	execute_str(squares_1_to_1000), nl, 
-	execute_str(fib_1_to_100).
+	exec(hello_world), nl, 
+	exec(squares_1_to_1000), nl, 
+	exec(fib_1_100).
