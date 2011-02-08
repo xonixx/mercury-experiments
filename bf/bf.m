@@ -113,20 +113,20 @@ get_chars_from_current_stream(Chars) -->
 		error(error_message(Error))
 	}.
 
-launch(Filename) -->
-	see(Filename, Result),
-	(	{ Result = ok },
-		get_chars_from_current_stream(Chars),
-		seen,
-		execute_chars(Chars)	
+launch(Filename, !IO) :-
+	see(Filename, Result, !IO),
+	(	Result = ok,
+		get_chars_from_current_stream(Chars, !IO),
+		seen(!IO),
+		execute_chars(Chars, !IO)	
 	;	
-		{ Result = error(Error) },
-		print(Filename ++ " : "), 
-		print(error_message(Error):string)	
+		Result = error(Error),
+		write_string(Filename ++ " : ", !IO), 
+		write_string(error_message(Error), !IO)	
 	).
 	
 usage -->
-	print("Usage: \n\n\tbf program_name.bf").
+	write_string("Usage: \n\n\tbf program_name.bf").
 
 main(!IO) :-
 	command_line_arguments(Args, !IO),
