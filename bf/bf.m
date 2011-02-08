@@ -10,7 +10,7 @@
 
 :- import_module list, string, char, solutions, require, int.
 
-:- type bf_cmd ---> plus; minus; step; back; print; cycle(list(bf_cmd));
+:- type bf_cmd ---> plus; minus; step; back; print; read; cycle(list(bf_cmd));
 				plus(int); zero. % optimized commands
 
 :- type bf_state ---> bf_state(
@@ -44,11 +44,12 @@ clean_chars([H|T]) = R :-
 	).
 
 :- mode ast(out, in, out) is multi.
-ast([plus|Cmds]) --> ['+'], ast(Cmds).	
-ast([minus|Cmds]) --> ['-'], ast(Cmds).	
-ast([step|Cmds]) --> ['>'], ast(Cmds).	
-ast([back|Cmds]) --> ['<'], ast(Cmds).	
-ast([print|Cmds]) --> ['.'], ast(Cmds).	
+ast([plus|Cmds]) --> ['+'], ast(Cmds).
+ast([minus|Cmds]) --> ['-'], ast(Cmds).
+ast([step|Cmds]) --> ['>'], ast(Cmds).
+ast([back|Cmds]) --> ['<'], ast(Cmds).
+ast([print|Cmds]) --> ['.'], ast(Cmds).
+ast([read|Cmds]) --> [','], ast(Cmds).
 ast([cycle(Cycle)|Cmds]) --> ['['], ast(Cycle), [']'], ast(Cmds).
 ast([]) --> [].
 
@@ -62,6 +63,7 @@ execute_cmd(zero, bf_state(L,_,R), bf_state(L, 0, R)) --> [].
 execute_cmd(step, bf_state(L,C,R), bf_state([C|L], H, T)) --> {R = [], H=0, T=[]; R = [H|T]}.
 execute_cmd(back, bf_state(L,C,R), bf_state(T, H, [C|R])) --> {L = [], H=0, T=[]; L = [H|T]}.
 execute_cmd(print, S @ bf_state(_,C,_), S) --> print(char.det_from_int(C):char).
+execute_cmd(read, S /* @ bf_state(_,C,_) */, S) --> { error("Sorry, can't read yet") }.
 execute_cmd(Cmd @ cycle(Cmds), !.S @ bf_state(_,C,_), !:S) --> 
 	(	{C \= 0} -> 
 		execute_ast(Cmds, !S), 
@@ -104,13 +106,32 @@ execute_chars(Chars) -->
 	%print(AstOpt),nl,nl,
 	execute_ast(AstOpt, bf_state([], 0, []), _).
 
-get_chars_from_stdin(Chars) -->
+get_chars_from_current_stream(Chars) -->
 	read_file(Result),
 	{	Result = ok(Chars)
 	;	Result = error(_,Error),
 		error(error_message(Error))
 	}.
 
-main --> 
-	get_chars_from_stdin(Chars),
-	execute_chars(Chars).
+launch(Filename) -->
+	see(Filename, Result),
+	(	{ Result = ok },
+		get_chars_from_current_stream(Chars),
+		seen,
+		execute_chars(Chars)	
+	;	
+		{ Result = error(Error) },
+		print(Filename ++ " : "), 
+		print(error_message(Error):string)	
+	).
+	
+usage -->
+	print("Usage: \n\n\tbf program_name.bf").
+
+main(!IO) :-
+	command_line_arguments(Args, !IO),
+	(	Args = [Filename|_], 
+		launch(Filename, !IO)
+	;	Args = [],
+		usage(!IO)
+	).
