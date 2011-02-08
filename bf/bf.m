@@ -62,9 +62,12 @@ prog_hard = "
 ".
 	
 prog_to_ast(Prog) = Ast :-
-	to_char_list(Prog, Chars0),
-	Chars = clean_chars(Chars0),
-	solutions(pred(Ast_::out) is nondet :- ast(Ast_, Chars, []:list(char)), Asts),
+	to_char_list(Prog, Chars),
+	Ast = chars_to_ast(Chars).
+	
+chars_to_ast(Chars) = Ast :-
+	CharsClean = clean_chars(Chars),
+	solutions(pred(Ast_::out) is nondet :- ast(Ast_, CharsClean, []:list(char)), Asts),
 	(	Asts = [], error("Program invalid (parse error)!")
 	;	Asts = [Ast|_]
 	).
@@ -139,17 +142,26 @@ optimize_ast(InAst) = OutAst :-
 	).
 		
 
-execute_str(Prog) --> 
-	{	Ast = prog_to_ast(Prog),
+execute_chars(Chars) --> 
+	{	Ast = chars_to_ast(Chars),
 		AstOpt = optimize_ast(Ast)
 	},
 	%print(Ast),nl,nl,
 	%print(AstOpt),nl,nl,
 	execute_ast(AstOpt, bf_state([], 0, []), _).
 
+get_chars_from_stdin(Chars) -->
+	read_file(Result),
+	{	Result = ok(Chars)
+	;	Result = error(_,Error),
+		error(error_message(Error))
+	}.
+
 main --> 
-	execute_str(hello_world), nl, 
-	execute_str(squares_1_to_1000), nl, 
-	execute_str(fib_1_to_100), nl,
-	execute_str(prog_hard)
+	%execute_str(hello_world), nl, 
+	%execute_str(squares_1_to_1000), nl, 
+	%execute_str(fib_1_to_100), nl,
+	%execute_str(prog_hard),
+	get_chars_from_stdin(Chars),
+	execute_chars(Chars)
 	.
