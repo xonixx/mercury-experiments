@@ -40,11 +40,49 @@ fib_1_to_100 = "+++++++++++\
 <<<<<<<<<<[>>>+>+<<<<-]>>>>[<<<<+>>>>-]<-[>>.>.<<<\
 [-]]<<[>>+>+<<<-]>>>[<<<+>>>-]<<[<+>-]>[<+>-]<<<-]".
 	
+prog_hard = "
+>+>+>+>+>++<[>[<+++>-
+ >>>>>
+ >+>+>+>+>++<[>[<+++>-
+   >>>>>
+   >+>+>+>+>++<[>[<+++>-
+     >>>>>
+     >+>+>+>+>++<[>[<+++>-
+       >>>>>
+       +++[->+++++<]>[-]<
+       <<<<<
+     ]<<]>[-]
+     <<<<<
+   ]<<]>[-]
+   <<<<<
+ ]<<]>[-]
+ <<<<<
+]<<]>.
+".
+	
 prog_to_ast(Prog) = Ast :-
-	to_char_list(Prog, Chars), 
+	to_char_list(Prog, Chars0),
+	Chars = clean_chars(Chars0),
 	solutions(pred(Ast_::out) is nondet :- ast(Ast_, Chars, []:list(char)), Asts),
 	(	Asts = [], error("Program invalid (parse error)!")
 	;	Asts = [Ast|_]
+	).
+	
+bf('+').
+bf('-').
+bf('>').
+bf('<').
+bf('[').
+bf(']').
+bf('.').
+bf(',').
+
+clean_chars([]) = [].
+clean_chars([H|T]) = R :-
+	(	bf(H)	->
+		R = [H|clean_chars(T)]
+	;	
+		R = clean_chars(T)
 	).
 
 :- mode ast(out, in, out) is multi.
@@ -77,4 +115,6 @@ execute_str(Prog) --> {Ast = prog_to_ast(Prog)}, execute_ast(Ast, bf_state([], 0
 main --> 
 	execute_str(hello_world), nl, 
 	execute_str(squares_1_to_1000), nl, 
-	execute_str(fib_1_to_100).
+	execute_str(fib_1_to_100), nl,
+	execute_str(prog_hard)
+	.
