@@ -19,10 +19,6 @@
 	right :: list(int)
 ).
 
-prog_to_ast(Prog) = Ast :-
-	to_char_list(Prog, Chars),
-	Ast = chars_to_ast(Chars).
-	
 chars_to_ast(Chars) = Ast :-
 	CharsClean = clean_chars(Chars),
 	solutions(pred(Ast_::out) is nondet :- ast(Ast_, CharsClean, []:list(char)), Asts),
