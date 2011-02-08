@@ -63,7 +63,16 @@ execute_cmd(zero, bf_state(L,_,R), bf_state(L, 0, R)) --> [].
 execute_cmd(step, bf_state(L,C,R), bf_state([C|L], H, T)) --> {R = [], H=0, T=[]; R = [H|T]}.
 execute_cmd(back, bf_state(L,C,R), bf_state(T, H, [C|R])) --> {L = [], H=0, T=[]; L = [H|T]}.
 execute_cmd(print, S @ bf_state(_,C,_), S) --> print(char.det_from_int(C):char).
-execute_cmd(read, S /* @ bf_state(_,C,_) */, S) --> { error("Sorry, can't read yet") }.
+execute_cmd(read, bf_state(L,_,R), bf_state(L, char.to_int(Char), R)) --> 
+	read_char(Res),
+	{	Res = ok(Char)
+	;	
+		Res = eof,
+		error("eof")
+	;
+		Res = error(Error),
+		error(error_message(Error))	
+	}.
 execute_cmd(Cmd @ cycle(Cmds), !.S @ bf_state(_,C,_), !:S) --> 
 	(	{C \= 0} -> 
 		execute_ast(Cmds, !S), 
