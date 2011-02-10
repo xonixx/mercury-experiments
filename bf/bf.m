@@ -10,8 +10,16 @@
 
 :- import_module list, string, char, solutions, require, int.
 
+:- type side ---> to_left; to_right.
+
 :- type bf_cmd ---> plus; minus; step; back; print; read; cycle(list(bf_cmd));
-				plus(int); zero. % optimized commands
+				% optimized commands
+				plus(int); zero;
+				
+				% [<++++++>-] => move(left, 1, 5)
+				% [>>>>+<<<<-] => move(right, 4, 1)
+				move(side :: side, steps :: int, multiplier :: int);
+				step(int); back(int). 
 
 :- type bf_state ---> bf_state(
 	left :: list(int),
@@ -19,11 +27,15 @@
 	right :: list(int)
 ).
 
+one_solution(Pred, Solution) :-
+	solutions(Pred, [Solution|_]).
+
 chars_to_ast(Chars) = Ast :-
 	CharsClean = clean_chars(Chars),
-	solutions(pred(Ast_::out) is nondet :- ast(Ast_, CharsClean, []:list(char)), Asts),
-	(	Asts = [], error("Program invalid (parse error)!")
-	;	Asts = [Ast|_]
+	(	one_solution(pred(Ast_::out) is nondet :- ast(Ast_, CharsClean, []:list(char)), Ast0) ->
+		Ast = Ast0
+	;
+		error("Program invalid (parse error)!")
 	).
 	
 bf('+'). bf('-').
@@ -76,6 +88,31 @@ execute_cmd(Cmd @ cycle(Cmds), !.S @ bf_state(_,C,_), !:S) -->
 	;
 		[]
 	).
+execute_cmd(step(N), !S) --> 
+	(	{N > 0} ->
+		execute_cmd(step,!S),
+		execute_cmd(step(N-1),!S)
+	;
+		[]
+	).
+execute_cmd(back(N), !S) --> 
+	(	{N > 0} ->
+		execute_cmd(back,!S),
+		execute_cmd(back(N-1),!S)
+	;
+		[]
+	).
+execute_cmd(move(Side, Steps, Multiplier), !.S @ bf_state(_,C,_), !:S) -->
+	{	Side = to_left,
+		A = back(Steps),
+		B = step(Steps)
+	;
+		Side = to_right,
+		A = step(Steps),
+		B = back(Steps)
+	},
+	execute_ast([A, plus(C * Multiplier), B, zero], !S).
+	
 
 optimize_ast(InAst) = OutAst :-
 	(	(InAst = [cycle([plus])|T]; InAst = [cycle([minus])|T]) ->
