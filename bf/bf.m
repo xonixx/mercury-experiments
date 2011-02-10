@@ -131,21 +131,44 @@ optimize_ast(InAst) = OutAst :-
 		OutAst = optimize_ast([plus(N-1)|T])
 	;	
 		InAst = [cycle(Ast1)|T] ->
-		OutAst = [cycle(optimize_ast(Ast1))|optimize_ast(T)]
+		(	one_solution(pred(P_::out) is nondet :- move_pattern(P_, Ast1, []:list(bf_cmd)), P) ->
+			OutAst = [P|optimize_ast(T)]
+		;
+			OutAst = [cycle(optimize_ast(Ast1))|optimize_ast(T)]
+		)
 	;
 		InAst = [H|T] ->
 		OutAst = [H|optimize_ast(T)]
 	;
 		OutAst = InAst
 	).
-		
+
+
+take(E, N) --> take(E, 0, N), {N > 0}.
+
+take(E, N0, N1) --> 
+	(	[E] -> 
+		take(E, N0+1, N1)
+	;
+		{N0 = N1}
+	).
+
+% [-<++++++>]
+% [<++++++>-]
+% [->>>>+<<<<]
+% [>>>>+<<<<-]
+one_minus --> [bf.minus].
+move_pattern(move(to_left, Steps, Multiplier)) --> one_minus, take(back, Steps), take(bf.plus, Multiplier), take(step, Steps).
+move_pattern(move(to_left, Steps, Multiplier)) --> take(back, Steps), take(bf.plus, Multiplier), take(step, Steps), one_minus.
+move_pattern(move(to_right, Steps, Multiplier)) --> one_minus, take(step, Steps), take(bf.plus, Multiplier), take(back, Steps).
+move_pattern(move(to_right, Steps, Multiplier)) --> take(step, Steps), take(bf.plus, Multiplier), take(back, Steps), one_minus.
 
 execute_chars(Chars) --> 
 	{	Ast = chars_to_ast(Chars),
 		AstOpt = optimize_ast(Ast)
 	},
-	%print(Ast),nl,nl,
-	%print(AstOpt),nl,nl,
+	print(Ast),nl,nl,
+	print(AstOpt),nl,nl,
 	execute_ast(AstOpt, bf_state([], 0, []), _).
 
 get_chars_from_current_stream(Chars) -->
