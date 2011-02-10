@@ -167,14 +167,15 @@ execute_chars(Chars) -->
 	{	Ast = chars_to_ast(Chars),
 		AstOpt = optimize_ast(Ast)
 	},
-	print(Ast),nl,nl,
-	print(AstOpt),nl,nl,
+	%print(Ast),nl,nl,
+	%print(AstOpt),nl,nl,
 	execute_ast(AstOpt, bf_state([], 0, []), _).
 
 get_chars_from_current_stream(Chars) -->
 	read_file(Result),
 	{	Result = ok(Chars)
-	;	Result = error(_,Error),
+	;	
+		Result = error(_,Error),
 		error(error_message(Error))
 	}.
 
@@ -197,6 +198,7 @@ main(!IO) :-
 	command_line_arguments(Args, !IO),
 	(	Args = [Filename|_], 
 		launch(Filename, !IO)
-	;	Args = [],
+	;	
+		Args = [],
 		usage(!IO)
 	).
