@@ -21,6 +21,8 @@
 				move(side :: side, steps :: int, multiplier :: int);
 				step(int); back(int). 
 
+:- type bf_ast == list(bf_cmd).
+
 :- type bf_state ---> bf_state(
 	left :: list(int),
 	cell :: int,
@@ -117,10 +119,19 @@ execute_cmd(move(Side, Steps, Multiplier), !.S @ bf_state(_,C,_), !:S) -->
 	},
 	execute_ast([A, plus(C * Multiplier), B, zero], !S).
 	
-
+optimize_cycle(CycleAst) = Res :-
+	(	(CycleAst = [bf.plus]; CycleAst = [bf.minus]) ->
+		Res = zero
+	;
+		one_solution(pred(P_::out) is nondet :- move_pattern(P_, CycleAst, []:bf_ast), MoveCmd) ->
+		Res = MoveCmd
+	;
+		Res = cycle(optimize_ast(CycleAst))
+	).		
+		
 optimize_ast(InAst) = OutAst :-
-	(	(InAst = [cycle([plus])|T]; InAst = [cycle([minus])|T]) ->
-		OutAst = [zero|optimize_ast(T)]
+	(	InAst = [cycle(CycleAst)|T] ->
+		OutAst = [optimize_cycle(CycleAst)|optimize_ast(T)]
 	;
 		InAst = [plus,plus|T] ->
 		OutAst = optimize_ast([plus(2)|T])
@@ -134,13 +145,6 @@ optimize_ast(InAst) = OutAst :-
 		InAst = [plus(N),minus|T] ->
 		OutAst = optimize_ast([plus(N-1)|T])
 	;	
-		InAst = [cycle(Ast1)|T] ->
-		(	one_solution(pred(P_::out) is nondet :- move_pattern(P_, Ast1, []:list(bf_cmd)), P) ->
-			OutAst = [P|optimize_ast(T)]
-		;
-			OutAst = [cycle(optimize_ast(Ast1))|optimize_ast(T)]
-		)
-	;
 		InAst = [H|T] ->
 		OutAst = [H|optimize_ast(T)]
 	;
