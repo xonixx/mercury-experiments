@@ -15,7 +15,7 @@
 ].
 
 :- instance a(int) where [
-	aaa(E) = E 
+	aaa(E) = E+1 
 ].
 
 :- type q ---> some [T] q(T) => a(T).
