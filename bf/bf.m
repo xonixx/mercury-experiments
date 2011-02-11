@@ -27,6 +27,8 @@
 	right :: list(int)
 ).
 
+description = "Brainfuck interpreter written on Mercury by Vladimir Gubarkov (xonixx@gmail.com)".
+
 one_solution(Pred, Solution) :-
 	solutions(Pred, [Solution|_]).
 
@@ -194,7 +196,8 @@ launch(Filename, !IO) :-
 	).
 	
 usage -->
-	write_string("Usage: \n\n\tbf program_name.bf").
+	write_string(description), nl,
+	write_string("Usage:\n    bf program_name.bf").
 
 main(!IO) :-
 	command_line_arguments(Args, !IO),
