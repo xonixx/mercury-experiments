@@ -29,7 +29,8 @@
 	right :: list(int)
 ).
 
-description = "Brainfuck interpreter written on Mercury by Vladimir Gubarkov (xonixx@gmail.com)".
+description = "Brainfuck interpreter written on Mercury programming language \
+(http://www.mercury.csse.unimelb.edu.au/) by Vladimir Gubarkov (xonixx@gmail.com)".
 
 one_solution(Pred, Solution) :-
 	solutions(Pred, [Solution|_]).
@@ -176,7 +177,7 @@ execute_chars(Chars, Options, !IO) :-
 	AstOpt = optimize_ast(Ast),
 	lookup_bool_option(Options, print_ast, PrintAst),
 	(	PrintAst = bool.yes,
-		write_string("\nAST:\n", !IO),
+		write_string("AST:\n", !IO),
 		print(Ast, !IO),
 		write_string("\n\nOptimized AST:\n", !IO),
 		print(AstOpt, !IO)
@@ -206,17 +207,26 @@ launch(Filename, Options, !IO) :-
 	).
 	
 usage -->
-	write_string(description), nl,
-	write_string("Usage: bf program_name.bf").
+	write_strings([description,
+	"\nUsage: bf [options] <file.bf>",
+	"\nOptions:",
+	"\n\t-A, --ast", 
+		"\n\t\tPrint AST & optimized AST of bf program.",
+	"\n\t--help",
+		"\n\t\tPring this help."
+	]).
 	
-:- type bf_option ---> print_ast.
+:- type bf_option ---> print_ast; help.
 
 :- mode opt_short(in, out) is semidet.
 :- mode opt_long(in, out) is semidet.
 :- mode opt_defaults(out, out) is nondet.
+
 opt_short('A', print_ast).
 opt_long("ast", print_ast).
+opt_long("help", help).
 opt_defaults(print_ast, bool(bool.no):option_data).
+opt_defaults(help, bool(bool.no):option_data).
 
 main(!IO) :-
 	command_line_arguments(Args0, !IO),
