@@ -103,9 +103,10 @@ execute_cmd(Cmd @ cycle(Cmds), !.S @ bf_state(_,C,_), !:S) -->
 		[]
 	).
 execute_cmd(step(N), !S) --> 
-	(	{N \= 0} ->
-		execute_cmd(step,!S),
-		execute_cmd(step(N > 0 -> N-1; N+1),!S)
+	(	{ N \= 0 } ->
+		{ GreaterThenZero = (N > 0) },
+		execute_cmd((GreaterThenZero -> step; back),!S),
+		execute_cmd(step(GreaterThenZero -> N-1; N+1),!S)
 	;
 		[]
 	).
