@@ -15,11 +15,17 @@
 :- type bf_cmd ---> plus; minus; step; back; print; read; cycle(list(bf_cmd));
 				% optimized commands
 				plus(int); zero;
+					
+				step(int); % may be less then 0
 				
 				% [<++++++>-] => move(left, 1, 5)
 				% [>>>>+<<<<-] => move(right, 4, 1)
 				move(side :: side, steps :: int, multiplier :: int);
-				step(int); back(int). 
+				
+				% [<<<<+>>>>>>+<<-]
+				move2(steps1 :: bf_cmd, mul1 :: int, 
+					steps2 :: bf_cmd, mul2 :: int, 
+					steps3 :: bf_cmd). 
 
 :- type bf_ast == list(bf_cmd).
 
@@ -69,6 +75,7 @@ ast([]) --> [].
 execute_ast([], !State) --> [].
 execute_ast([Cmd|Cmds], !State) --> execute_cmd(Cmd, !State), execute_ast(Cmds, !State).
 
+:- mode execute_cmd(in, in, out, di, uo) is det.
 execute_cmd(plus, bf_state(L,C,R), bf_state(L, C+1, R)) --> [].
 execute_cmd(minus, bf_state(L,C,R), bf_state(L, C-1, R)) --> [].
 execute_cmd(plus(N), bf_state(L,C,R), bf_state(L, C+N, R)) --> [].
@@ -96,29 +103,33 @@ execute_cmd(Cmd @ cycle(Cmds), !.S @ bf_state(_,C,_), !:S) -->
 		[]
 	).
 execute_cmd(step(N), !S) --> 
-	(	{N > 0} ->
+	(	{N \= 0} ->
 		execute_cmd(step,!S),
-		execute_cmd(step(N-1),!S)
+		execute_cmd(step(N > 0 -> N-1; N+1),!S)
 	;
 		[]
 	).
-execute_cmd(back(N), !S) --> 
-	(	{N > 0} ->
-		execute_cmd(back,!S),
-		execute_cmd(back(N-1),!S)
-	;
-		[]
-	).
+%~ execute_cmd(back(N), !S) --> 
+	%~ (	{N > 0} ->
+		%~ execute_cmd(back,!S),
+		%~ execute_cmd(back(N-1),!S)
+	%~ ;
+		%~ []
+	%~ ).
 execute_cmd(move(Side, Steps, Multiplier), !.S @ bf_state(_,C,_), !:S) -->
 	{	Side = to_left,
-		A = back(Steps),
+		A = step(-Steps),
 		B = step(Steps)
 	;
 		Side = to_right,
 		A = step(Steps),
-		B = back(Steps)
+		B = step(-Steps)
 	},
 	execute_ast([A, plus(C * Multiplier), B, zero], !S).
+execute_cmd(move2(Steps1, Mul1, Steps2, Mul2, Steps3), !.S @ bf_state(_,C,_), !:S) -->
+	execute_ast([Steps1, plus(C * Mul1), 
+			Steps2, plus(C * Mul2),
+			Steps3, zero], !S).
 	
 optimize_cycle(CycleAst) = Res :-
 	(	(CycleAst = [bf.plus]; CycleAst = [bf.minus]) ->
@@ -167,10 +178,31 @@ take(E, N0, N1) -->
 % [->>>>+<<<<]
 % [>>>>+<<<<-]
 one_minus --> [bf.minus].
-move_pattern(move(to_left, Steps, Multiplier)) --> one_minus, take(back, Steps), take(bf.plus, Multiplier), take(step, Steps).
-move_pattern(move(to_left, Steps, Multiplier)) --> take(back, Steps), take(bf.plus, Multiplier), take(step, Steps), one_minus.
-move_pattern(move(to_right, Steps, Multiplier)) --> one_minus, take(step, Steps), take(bf.plus, Multiplier), take(back, Steps).
-move_pattern(move(to_right, Steps, Multiplier)) --> take(step, Steps), take(bf.plus, Multiplier), take(back, Steps), one_minus.
+
+move_to_left(Steps, Multiplier) --> take(back, Steps), take(bf.plus, Multiplier), take(step, Steps).
+move_to_right(Steps, Multiplier) --> take(step, Steps), take(bf.plus, Multiplier), take(back, Steps).
+
+move_pattern(move(to_left, Steps, Multiplier)) --> one_minus, move_to_left(Steps, Multiplier).
+move_pattern(move(to_left, Steps, Multiplier)) --> move_to_left(Steps, Multiplier), one_minus.
+move_pattern(move(to_right, Steps, Multiplier)) --> one_minus, move_to_right(Steps, Multiplier).
+move_pattern(move(to_right, Steps, Multiplier)) --> move_to_right(Steps, Multiplier), one_minus.
+
+% [<<<<+>>>>>>+<<-]
+steps(step(-N)) --> take(back, N).
+steps(step(N)) --> take(step, N).
+
+move2(Steps1, Mul1, Steps2, Mul2, Steps3) -->
+	steps(Steps1), take(bf.plus, Mul1), steps(Steps2), take(bf.plus, Mul2), steps(Steps3),
+	{ steps_add([Steps1, Steps2, Steps3], 0) }.	
+
+move2_pattern(move2(Steps1, Mul1, Steps2, Mul2, Steps3):bf_cmd) --> 
+	one_minus, move2(Steps1, Mul1, Steps2, Mul2, Steps3).
+move2_pattern(move2(Steps1, Mul1, Steps2, Mul2, Steps3)) --> 
+	move2(Steps1, Mul1, Steps2, Mul2, Steps3), one_minus.
+
+steps_add([], 0).
+steps_add([step(N)], N).
+steps_add([step(N), step(N1)|T], R) :- steps_add([step(N+N1)|T], R).
 
 execute_chars(Chars, Options, !IO) :- 
 	Ast = chars_to_ast(Chars),
