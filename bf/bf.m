@@ -35,7 +35,7 @@
 	right :: list(int)
 ).
 
-description = "Brainfuck interpreter written on Mercury programming language \
+description = "Brainfuck interpreter written in Mercury programming language \
 (http://www.mercury.csse.unimelb.edu.au/) by Vladimir Gubarkov (xonixx@gmail.com)".
 
 one_solution(Pred, Solution) :-
@@ -212,7 +212,7 @@ execute_chars(Chars, Options, !IO) :-
 		print(AstOpt, !IO)
 	;
 		PrintAst = no,
-		lookup_bool_option(Options, no_opt, NoOpt),
+		lookup_bool_option(Options, do_not_optimize, NoOpt),
 		(	NoOpt = yes,
 			UseAst = Ast
 		;
@@ -248,13 +248,13 @@ usage -->
 	"\n\nOptions:",
 	"\n\t-a, --ast", 
 		"\n\t\tPrint AST & optimized AST of bf program.",
-	"\n\t-n, --no-opt", 
+	"\n\t-n, --do-not-optimize", 
 		"\n\t\tTurn off optimization.",
 	"\n\t-h, --help",
 		"\n\t\tPring this help."
 	]).
 	
-:- type bf_option ---> print_ast; help; no_opt.
+:- type bf_option ---> print_ast; help; do_not_optimize.
 
 :- mode opt_short(in, out) is semidet.
 :- mode opt_long(in, out) is semidet.
@@ -262,15 +262,15 @@ usage -->
 
 opt_short('a', print_ast).
 opt_short('h', help).
-opt_short('n', no_opt).
+opt_short('n', do_not_optimize).
 
 opt_long("ast", print_ast).
 opt_long("help", help).
-opt_long("noopt", no_opt).
+opt_long("do-not-optimize", do_not_optimize).
 
 opt_defaults(print_ast, bool(bool.no):option_data).
 opt_defaults(help, bool(bool.no)).
-opt_defaults(no_opt, bool(bool.no)).
+opt_defaults(do_not_optimize, bool(bool.no)).
 
 main(!IO) :-
 	command_line_arguments(Args0, !IO),
