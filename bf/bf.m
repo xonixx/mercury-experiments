@@ -110,13 +110,6 @@ execute_cmd(step(N), !S) -->
 	;
 		[]
 	).
-%~ execute_cmd(back(N), !S) --> 
-	%~ (	{N > 0} ->
-		%~ execute_cmd(back,!S),
-		%~ execute_cmd(back(N-1),!S)
-	%~ ;
-		%~ []
-	%~ ).
 execute_cmd(move(Side, Steps, Multiplier), !.S @ bf_state(_,C,_), !:S) -->
 	{	Side = to_left,
 		A = step(-Steps),
@@ -138,6 +131,9 @@ optimize_cycle(CycleAst) = Res :-
 	;
 		one_solution(pred(P_::out) is nondet :- move_pattern(P_, CycleAst, []:bf_ast), MoveCmd) ->
 		Res = MoveCmd
+	;
+		one_solution(pred(P_::out) is nondet :- move2_pattern(P_, CycleAst, []:bf_ast), Move2Cmd) ->
+		Res = Move2Cmd
 	;
 		Res = cycle(optimize_ast(CycleAst))
 	).		
