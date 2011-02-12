@@ -8,7 +8,7 @@
 
 :- implementation.
 
-:- import_module list, string, char, solutions, require, int.
+:- import_module list, string, char, solutions, require, int, bool, getopt.
 
 :- type side ---> to_left; to_right.
 
@@ -171,13 +171,19 @@ move_pattern(move(to_left, Steps, Multiplier)) --> take(back, Steps), take(bf.pl
 move_pattern(move(to_right, Steps, Multiplier)) --> one_minus, take(step, Steps), take(bf.plus, Multiplier), take(back, Steps).
 move_pattern(move(to_right, Steps, Multiplier)) --> take(step, Steps), take(bf.plus, Multiplier), take(back, Steps), one_minus.
 
-execute_chars(Chars) --> 
-	{	Ast = chars_to_ast(Chars),
-		AstOpt = optimize_ast(Ast)
-	},
-	%print(Ast),nl,nl,
-	%print(AstOpt),nl,nl,
-	execute_ast(AstOpt, bf_state([], 0, []), _).
+execute_chars(Chars, Options, !IO) :- 
+	Ast = chars_to_ast(Chars),
+	AstOpt = optimize_ast(Ast),
+	lookup_bool_option(Options, print_ast, PrintAst),
+	(	PrintAst = bool.yes,
+		write_string("\nAST:\n", !IO),
+		print(Ast, !IO),
+		write_string("\n\nOptimized AST:\n", !IO),
+		print(AstOpt, !IO)
+	;
+		PrintAst = bool.no,
+		execute_ast(AstOpt, bf_state([], 0, []), _, !IO)
+	).
 
 get_chars_from_current_stream(Chars) -->
 	read_file(Result),
@@ -187,12 +193,12 @@ get_chars_from_current_stream(Chars) -->
 		error(error_message(Error))
 	}.
 
-launch(Filename, !IO) :-
+launch(Filename, Options, !IO) :-
 	see(Filename, Result, !IO),
 	(	Result = ok,
 		get_chars_from_current_stream(Chars, !IO),
 		seen(!IO),
-		execute_chars(Chars, !IO)	
+		execute_chars(Chars, Options, !IO)	
 	;	
 		Result = error(Error),
 		write_string(Filename ++ " : ", !IO), 
@@ -201,13 +207,33 @@ launch(Filename, !IO) :-
 	
 usage -->
 	write_string(description), nl,
-	write_string("Usage:\n    bf program_name.bf").
+	write_string("Usage: bf program_name.bf").
+	
+:- type bf_option ---> print_ast.
+
+:- mode opt_short(in, out) is semidet.
+:- mode opt_long(in, out) is semidet.
+:- mode opt_defaults(out, out) is nondet.
+opt_short('A', print_ast).
+opt_long("ast", print_ast).
+opt_defaults(print_ast, bool(bool.no):option_data).
 
 main(!IO) :-
-	command_line_arguments(Args, !IO),
-	(	Args = [Filename|_], 
-		launch(Filename, !IO)
+	command_line_arguments(Args0, !IO),
+	
+	process_options(
+		option_ops(opt_short,opt_long,opt_defaults),
+		Args0, Args,
+		MaybeOptions),
+		
+	(	MaybeOptions = error(String),
+		write_string(String, !IO)
 	;	
-		Args = [],
-		usage(!IO)
+		MaybeOptions = ok(Options),
+		(	Args = [Filename|_], 
+			launch(Filename, Options, !IO)
+		;	
+			Args = [],
+			usage(!IO)
+		)
 	).
