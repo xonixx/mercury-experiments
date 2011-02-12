@@ -205,14 +205,21 @@ execute_chars(Chars, Options, !IO) :-
 	Ast = chars_to_ast(Chars),
 	AstOpt = optimize_ast(Ast),
 	lookup_bool_option(Options, print_ast, PrintAst),
-	(	PrintAst = bool.yes,
+	(	PrintAst = yes,
 		write_string("AST:\n", !IO),
 		print(Ast, !IO),
 		write_string("\n\nOptimized AST:\n", !IO),
 		print(AstOpt, !IO)
 	;
-		PrintAst = bool.no,
-		execute_ast(AstOpt, bf_state([], 0, []), _, !IO)
+		PrintAst = no,
+		lookup_bool_option(Options, no_opt, NoOpt),
+		(	NoOpt = yes,
+			UseAst = Ast
+		;
+			NoOpt = no,
+			UseAst = AstOpt
+		),
+		execute_ast(UseAst, bf_state([], 0, []), _, !IO)
 	).
 
 get_chars_from_current_stream(Chars) -->
@@ -237,25 +244,33 @@ launch(Filename, Options, !IO) :-
 	
 usage -->
 	write_strings([description,
-	"\nUsage: bf [options] <file.bf>",
-	"\nOptions:",
-	"\n\t-A, --ast", 
+	"\n\nUsage: bf [options] <file.bf>",
+	"\n\nOptions:",
+	"\n\t-a, --ast", 
 		"\n\t\tPrint AST & optimized AST of bf program.",
-	"\n\t--help",
+	"\n\t-n, --no-opt", 
+		"\n\t\tTurn off optimization.",
+	"\n\t-h, --help",
 		"\n\t\tPring this help."
 	]).
 	
-:- type bf_option ---> print_ast; help.
+:- type bf_option ---> print_ast; help; no_opt.
 
 :- mode opt_short(in, out) is semidet.
 :- mode opt_long(in, out) is semidet.
 :- mode opt_defaults(out, out) is nondet.
 
-opt_short('A', print_ast).
+opt_short('a', print_ast).
+opt_short('h', help).
+opt_short('n', no_opt).
+
 opt_long("ast", print_ast).
 opt_long("help", help).
+opt_long("noopt", no_opt).
+
 opt_defaults(print_ast, bool(bool.no):option_data).
-opt_defaults(help, bool(bool.no):option_data).
+opt_defaults(help, bool(bool.no)).
+opt_defaults(no_opt, bool(bool.no)).
 
 main(!IO) :-
 	command_line_arguments(Args0, !IO),
@@ -269,10 +284,16 @@ main(!IO) :-
 		write_string(String, !IO)
 	;	
 		MaybeOptions = ok(Options),
-		(	Args = [Filename|_], 
-			launch(Filename, Options, !IO)
-		;	
-			Args = [],
+		lookup_bool_option(Options, help, Help),
+		(	Help = yes,
 			usage(!IO)
+		;
+			Help = no,
+			(	Args = [],
+				usage(!IO)
+			;	
+				Args = [Filename|_], 
+				launch(Filename, Options, !IO)
+			)
 		)
 	).
