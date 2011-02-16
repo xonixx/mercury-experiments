@@ -39,7 +39,9 @@ description = "Brainfuck interpreter written in Mercury programming language \
 (http://www.mercury.csse.unimelb.edu.au/) by Vladimir Gubarkov (xonixx@gmail.com)".
 
 one_solution(Pred, Solution) :-
-	solutions(Pred, [Solution|_]).
+	promise_equivalent_solutions [Solution] (
+		Pred(Solution)
+	).
 
 chars_to_ast(Chars) = Ast :-
 	CharsClean = clean_chars(Chars),
@@ -258,7 +260,7 @@ usage -->
 
 :- mode opt_short(in, out) is semidet.
 :- mode opt_long(in, out) is semidet.
-:- mode opt_defaults(out, out) is nondet.
+:- mode opt_defaults(out, out) is multi.
 
 opt_short('a', print_ast).
 opt_short('h', help).
@@ -276,7 +278,7 @@ main(!IO) :-
 	command_line_arguments(Args0, !IO),
 	
 	process_options(
-		option_ops(opt_short,opt_long,opt_defaults),
+		option_ops_multi(opt_short,opt_long,opt_defaults),
 		Args0, Args,
 		MaybeOptions),
 		
