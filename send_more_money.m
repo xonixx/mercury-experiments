@@ -121,4 +121,5 @@ solve(W1, W2, W3) -->
 main -->
 	solve("SEND", "MORE", "MONEY"),
 	solve("DONALD","GERALD","ROBERT"),
-	solve("GREA", "TYOU", "DIDIT").
+	solve("GREA", "TYOU", "DIDIT"),
+	solve("USA", "USSR", "PEACE").
