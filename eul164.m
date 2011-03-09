@@ -42,8 +42,23 @@ gen(L, T, T1) :-
 
 %%gen(L, [H1,H2,H3|_] @ T, T1) :- L>0 -> less_eq(9-H1-H2-H3, H), gen(L-1, [H|T], T1); T1 = T.
 
-main -->
-	unsorted_aggregate(gen(3, []), (pred(L::in, di, uo) is det -->
-		print(L), nl)).
+test(N) -->
+	print(N), 
+	print(" -> "),
+	{promise_equivalent_solutions [L] unsorted_solutions(gen(N, []), L)},
+	%- {solutions(gen(N, []), L)},
+	write_int(length(L)),
+	nl.
 
+main -->
+	%~ unsorted_aggregate(gen(4, []), (pred(L::in, di, uo) is det -->
+		%~ print(L), nl)).
+	test(3),
+	test(4),
+	test(5),
+	test(6),
+	test(7),
+	test(8),
+	test(9)
+	.
 		
