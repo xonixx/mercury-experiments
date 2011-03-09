@@ -42,23 +42,39 @@ gen(L, T, T1) :-
 
 %%gen(L, [H1,H2,H3|_] @ T, T1) :- L>0 -> less_eq(9-H1-H2-H3, H), gen(L-1, [H|T], T1); T1 = T.
 
+%~ :- mode total_sol((pred(out) is nondet)) = out.
+%~ total_sol(Pred) = N :-
+	%~ unsorted_aggregate(Pred, 
+		%~ (pred(_::in, Acc0::in, Acc::out) is det :-
+			%~ Acc = Acc0 + 1
+		%~ ),
+		%~ 0,
+		%~ N).
+
 test(N) -->
 	print(N), 
 	print(" -> "),
-	{promise_equivalent_solutions [L] unsorted_solutions(gen(N, []), L)},
 	%- {solutions(gen(N, []), L)},
+
+	{promise_equivalent_solutions [L] unsorted_solutions(gen(N, []), L)},
 	write_int(length(L)),
+
+	%~ write_int(total_sol(gen(N, []))),
+
 	nl.
 
 main -->
 	%~ unsorted_aggregate(gen(4, []), (pred(L::in, di, uo) is det -->
 		%~ print(L), nl)).
+	test(1),
+	test(2),
 	test(3),
 	test(4),
 	test(5),
 	test(6),
 	test(7),
 	test(8),
-	test(9)
+	test(9),
+	test(10)
 	.
 		
