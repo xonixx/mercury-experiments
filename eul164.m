@@ -11,28 +11,29 @@
 
 :- import_module int, list, solutions.
 
-less_eq(Upto, N) :- less_eq(0, Upto, N).
+less_eq(Upto, N) :- from_to(0, Upto, N).
 
-less_eq(N0, Upto, N) :-
+from_to(N0, Upto, N) :-
 	N0 =< Upto,
 	(	N = N0
 	;
-		less_eq(N0 + 1, Upto, N)
+		from_to(N0 + 1, Upto, N)
 	). 
 
 :- mode gen(in, in, out) is nondet.
 gen(L, T, T1) :- 
-	(	L>0 -> 
+	(	L>0 ->
+		From = (L=1 -> 1; 0),
 		(	T = [],
-			less_eq(9, H), 
+			from_to(From, 9, H), 
 			gen(L-1, [H|T], T1)
 		;
 			T=[H1],
-			less_eq(9-H1, H), 
+			from_to(From, 9-H1, H), 
 			gen(L-1, [H|T], T1)
 		;
 			T=[H1,H2|_],
-			less_eq(9-H1-H2, H), 
+			from_to(From, 9-H1-H2, H), 
 			gen(L-1, [H|T], T1)
 		)
 	;
