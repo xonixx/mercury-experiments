@@ -23,9 +23,16 @@
 :- mode t(in(even_list)) is semidet.
 t([1,2,3,4]).
 
+:- pred form_pairs(list(T), list({T,T})).
+:- mode form_pairs(in(even_list), out) is det.
+%:- mode form_pairs(in, out) is det.
+form_pairs([], []).
+form_pairs([X,Y|T], [{X,Y}|TT]) :- form_pairs(T, TT).
+
 main(!IO) :-
-	%L=[1,2,3,4,5,6],
-	L=[1,2,3,4,5,6,7,8,9],
+	L=[1,2,3,4,5,6],
+	%L=[1,2,3,4,5,6,7,8,9],
+	form_pairs(L, P), print(P,!IO), nl(!IO),
 	(	t(L) ->
 		print("1",!IO)
 	;
