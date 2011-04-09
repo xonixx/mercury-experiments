@@ -34,8 +34,8 @@ problem1 = problem(
 	[
 		["Englishman", "Swedish", "Danish", "Norwegian", "German"],
 		["red", "green", "white", "yellow", "blue"],
-		["dog", "cat", "horse", "bird", "fish", "water"],
-		["tea", "coffee", "water", "milk", "beer", "water"],
+		["dog", "cat", "horse", "bird", "fish"],
+		["tea", "coffee", "milk", "beer", "water"],
 		["PallMall", "Dunhill", "Marlboro", "Winfield", "Rothmans"]
 	],
 	[
@@ -102,21 +102,37 @@ solve_verified(Problem, Solution) :-
 verify(problem(_, Domains, Rules), VerRes) :-
 	some [!VerRes] (
 		!:VerRes = [],
+		verify_domains_equal_len(Domains, !VerRes),
 		verify_domains(Domains, !VerRes),
 		append_lists(Domains, AllVars),
 		verify_rules(Rules, AllVars, !VerRes),
 		VerRes = !.VerRes
 	).
 	
-% todo: len
-verify_domains([], V, V).
+	
+verify_domains_equal_len([], !VerRes) :- add_error("There is no domains defined", !VerRes).
+verify_domains_equal_len([D|DD], !VerRes) :- 
+	list.length(D, L),
+	verify_domains_len(L, DD, !VerRes).
+		
+verify_domains_len(_, [], !VerRes).
+verify_domains_len(L, [D|DD], !VerRes) :-
+	(	list.length(D, L) ->
+		ok(!VerRes)
+	;
+		add_error("Invalid domain length", !VerRes)
+	),
+	verify_domains_len(L, DD, !VerRes).
+	
+
+verify_domains([], !VerRes).
 verify_domains([D | DD], !VerRes) :-
 	verify_domain(D, !VerRes),
 	verify_domain(D, DD, !VerRes),
 	verify_domains(DD, !VerRes).
 	
 % inner	
-verify_domain([], V, V).
+verify_domain([], !VerRes).
 verify_domain([E | EE], !VerRes) :-
 	verify_not_in_domain(E, EE, yes, !VerRes),
 	verify_domain(EE, !VerRes).
@@ -133,8 +149,8 @@ verify_not_in_domain(E, EE, MyDomain, !VerRes) :-
 		ok(!VerRes)
 	).	
 
-verify_domain([], _, V, V).
-verify_domain([_|_], [], V, V).
+verify_domain([], _, !VerRes).
+verify_domain([_|_], [], !VerRes).
 verify_domain([E|EE], [D|DD] @ DDD, !VerRes) :- 
 	verify_not_in_domain(E, D, no, !VerRes),
 	verify_domain([E], DD, !VerRes),
@@ -143,7 +159,7 @@ verify_domain([E|EE], [D|DD] @ DDD, !VerRes) :-
 add_error(S, EE, [S|EE]).	
 ok(EE,EE).	
 	
-verify_rules([], _, VerRes, VerRes). % todo
+verify_rules([], _, !VerRes).
 verify_rules([R | RR], AllVars, !VerRes) :-
 	verify_rule(R, AllVars, !VerRes),
 	verify_rules(RR, AllVars, !VerRes).
@@ -153,7 +169,7 @@ verify_rule(Rule, AllVars, !VerRes) :-
 	%trace [io(!IO)] print({VarNames, AllVars}, !IO),
 	verify_rule_var_names(VarNames, AllVars, !VerRes).
 	
-verify_rule_var_names([], _, V, V).	
+verify_rule_var_names([], _, !VerRes).	
 verify_rule_var_names([V|VV], AllVars, !VerRes) :-
 	(	member(V, AllVars) ->
 		ok(!VerRes)
