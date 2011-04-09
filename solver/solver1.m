@@ -76,19 +76,18 @@ solve_verified(Problem, Solution) :-
 	prepare_solution(SolutionMaps, Solution).
 	
 prepare_solution(SolutionMaps, Solution) :-
-	%trace [io(!IO)] print(SolutionMaps, !IO),
+	t("Found: ", SolutionMaps),
 	Solution = solution_ok([[]]).
 	
 :- mode solution_nd(in, out) is nondet.	
-solution_nd(Problem @ problem(Name, Domains, Rules), SolutionMap) :-
-	map.init(SolutionMap:map(string, int)),
-	AllVars = all_vars(Domains),
+solution_nd(problem(Name, Domains, Rules), GeneratedSolutionMap) :-
+	map.init(SolutionMap),
 	
 	length(det_head(Domains), L),
 	Numbers = 1 .. L,
 	
 	generate_solution_map_nd(SolutionMap, GeneratedSolutionMap, Domains, Numbers),
-	
+	%trace [io(!IO)] (print(GeneratedSolutionMap, !IO), nl(!IO)),
 	check_solution_map(GeneratedSolutionMap, Rules).
 	
 take_element(E, L, L1) :- list.delete(L, E, L1).	
@@ -104,9 +103,20 @@ process_domain(M0, M, [E|EE], !Numbers) :-
 	map.det_insert(M0, E, N, M1),
 	process_domain(M1, M, EE, !Numbers).
 
-check_solution_map(M, []).
+t(S, T) :- 
+	trace [io(!IO)] (
+		write_string(S, !IO), 
+		write_string(" ", !IO),
+		print(T, !IO), 
+		nl(!IO)
+	).
+t(S) :- t(S, "").	
+
+check_solution_map(_, []).
 check_solution_map(M, [R|RR]) :-
+	%t("Checking", {R, M}),
 	check_rule(M, R),
+	t("ok\n"),
 	check_solution_map(M, RR).
 	
 check_rule(M, eq(A, B)) :- get_values(M, A, B, AV, BV), AV = BV.	
@@ -236,9 +246,20 @@ problem1 = problem(
 		eq(s("German"),s("Rothmans")),
 		near(s("Marlboro"),s("water"))
 	]).
+	
+problem2 = problem("test",
+	[
+	["a", "b", "c"]
+	],
+	[
+		eq(s("a"), i(2)),
+		lt(s("c"), s("b"))
+	]
+).	
 
 main(!IO) :-
 	solve(problem1, Solution),
+	%solve(problem2, Solution),
 	(	Solution = solution_ok(SolutionOk),
 		print(SolutionOk, !IO)
 	;
