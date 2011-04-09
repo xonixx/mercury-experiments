@@ -5,7 +5,7 @@
 
 :- implementation.
 
-:- import_module list, bool, string.
+:- import_module list, bool, string, map, solutions, int.
 
 :- type problem 
 	--->	problem(name, domains, rules).
@@ -28,33 +28,6 @@
 :- type var
 	--->	i(int)
 	;	s(string).
-	
-problem1 = problem(
-	"Einstain problem",
-	[
-		["Englishman", "Swedish", "Danish", "Norwegian", "German"],
-		["red", "green", "white", "yellow", "blue"],
-		["dog", "cat", "horse", "bird", "fish"],
-		["tea", "coffee", "milk", "beer", "water"],
-		["PallMall", "Dunhill", "Marlboro", "Winfield", "Rothmans"]
-	],
-	[
-		eq(s("Englishman"),s("red")),
-		eq(s("Swedish"),s("dog")),
-		eq(s("Danish"),s("tea")),
-		lt(s("green"),s("white")),
-		eq(s("green"),s("coffee")),
-		eq(s("PallMall"),s("bird")),
-		eq(s("milk"),i(3)),
-		eq(s("yellow"),s("Dunhill")),
-		eq(s("Norwegian"),i(1)),
-		near(s("Marlboro"),s("cat")),
-		near(s("horse"),s("Dunhill")),
-		eq(s("Winfield"),s("beer")),
-		near(s("Norwegian"),s("blue")),
-		eq(s("German"),s("Rothmans")),
-		near(s("Marlboro"),s("water"))
-	]).
 	
 :- type solution_result 
 	--->	solution_ok(solution_ok)
@@ -86,29 +59,84 @@ extract_vars([s(S)|T]) = [S|extract_vars(T)].
 append_lists([], []).	
 append_lists([L], L).	
 append_lists([L1,L2|LL], L) :- append_lists([L1++L2|LL], L).	
-	
+
+:- mode solve(in, out) is det.
 solve(Problem, Solution) :-
 	verify(Problem, VerRes),
 	(	VerRes = [],
 		solve_verified(Problem, Solution)
 	;
 		VerRes = [_|_],
-		Solution=solution_error(VerRes)
+		Solution = solution_error(VerRes)
 	).
-	
+
+%:- mode solve_verified(in, out) is det.
 solve_verified(Problem, Solution) :-
+	solutions(solution_nd(Problem), SolutionMaps),
+	prepare_solution(SolutionMaps, Solution).
+	
+prepare_solution(SolutionMaps, Solution) :-
+	%trace [io(!IO)] print(SolutionMaps, !IO),
 	Solution = solution_ok([[]]).
+	
+:- mode solution_nd(in, out) is nondet.	
+solution_nd(Problem @ problem(Name, Domains, Rules), SolutionMap) :-
+	map.init(SolutionMap:map(string, int)),
+	AllVars = all_vars(Domains),
+	
+	length(det_head(Domains), L),
+	Numbers = 1 .. L,
+	
+	generate_solution_map_nd(SolutionMap, GeneratedSolutionMap, Domains, Numbers),
+	
+	check_solution_map(GeneratedSolutionMap, Rules).
+	
+take_element(E, L, L1) :- list.delete(L, E, L1).	
+	
+generate_solution_map_nd(!M, [], _).
+generate_solution_map_nd(!M, [D|DD], Numbers) :-
+	process_domain(!M, D, Numbers, []),
+	generate_solution_map_nd(!M, DD, Numbers).
+	
+process_domain(!M, [], !Numbers).	
+process_domain(M0, M, [E|EE], !Numbers) :-
+	take_element(N, !Numbers),
+	map.det_insert(M0, E, N, M1),
+	process_domain(M1, M, EE, !Numbers).
+
+check_solution_map(M, []).
+check_solution_map(M, [R|RR]) :-
+	check_rule(M, R),
+	check_solution_map(M, RR).
+	
+check_rule(M, eq(A, B)) :- get_values(M, A, B, AV, BV), AV = BV.	
+check_rule(M, neq(A, B)) :- get_values(M, A, B, AV, BV), AV \= BV.	
+
+check_rule(M, lt(A, B)) :- get_values(M, A, B, AV, BV), AV < BV.	
+check_rule(M, gt(A, B)) :- get_values(M, A, B, AV, BV), AV > BV.
+
+check_rule(M, near(A, B)) :- get_values(M, A, B, AV, BV), abs(AV - BV) = 1.	
+check_rule(M, not_near(A, B)) :- get_values(M, A, B, AV, BV), abs(AV - BV) \=1 .
+
+	
+get_values(M, A, B, get_value(M, A), get_value(M, B)).
+
+:- func get_value(map(string, int), var) = int.
+get_value(_, i(N)) = N.
+get_value(M, s(K)) = map.lookup(M, K).
+	
 
 verify(problem(_, Domains, Rules), VerRes) :-
 	some [!VerRes] (
 		!:VerRes = [],
 		verify_domains_equal_len(Domains, !VerRes),
 		verify_domains(Domains, !VerRes),
-		append_lists(Domains, AllVars),
-		verify_rules(Rules, AllVars, !VerRes),
+		verify_rules(Rules, all_vars(Domains), !VerRes),
 		VerRes = !.VerRes
 	).
 	
+
+all_vars(Domains) = AllVars :- append_lists(Domains, AllVars).
 	
 verify_domains_equal_len([], !VerRes) :- add_error("There is no domains defined", !VerRes).
 verify_domains_equal_len([D|DD], !VerRes) :- 
@@ -180,7 +208,35 @@ verify_rule_var_names([V|VV], AllVars, !VerRes) :-
 	
 
 write_errors(Errors, !IO) :- write_list(Errors, "\n", write_string, !IO).  
-	
+
+
+problem1 = problem(
+	"Einstain problem",
+	[
+		["Englishman", "Swedish", "Danish", "Norwegian", "German"],
+		["red", "green", "white", "yellow", "blue"],
+		["dog", "cat", "horse", "bird", "fish"],
+		["tea", "coffee", "milk", "beer", "water"],
+		["PallMall", "Dunhill", "Marlboro", "Winfield", "Rothmans"]
+	],
+	[
+		eq(s("Englishman"),s("red")),
+		eq(s("Swedish"),s("dog")),
+		eq(s("Danish"),s("tea")),
+		lt(s("green"),s("white")),
+		eq(s("green"),s("coffee")),
+		eq(s("PallMall"),s("bird")),
+		eq(s("milk"),i(3)),
+		eq(s("yellow"),s("Dunhill")),
+		eq(s("Norwegian"),i(1)),
+		near(s("Marlboro"),s("cat")),
+		near(s("horse"),s("Dunhill")),
+		eq(s("Winfield"),s("beer")),
+		near(s("Norwegian"),s("blue")),
+		eq(s("German"),s("Rothmans")),
+		near(s("Marlboro"),s("water"))
+	]).
+
 main(!IO) :-
 	solve(problem1, Solution),
 	(	Solution = solution_ok(SolutionOk),
