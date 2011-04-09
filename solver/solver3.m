@@ -139,27 +139,27 @@ helper_map_add(!M, S1, S2) :-
 
 prepare_helper_map_rule(R, !M). :-
 	(	R = eq(V1, V2) ->
-		(	V1 = num(_), V2=num(_) -> 
+		(	(V1 = num(_), V2 = num(_)) -> 
 			error("prepare_helper_map_rule both are nums")
 		;
 			helper_map_add(!M, V1, V2),
 			helper_map_add(!M, V2, V1)
 		)
 	;
-		!:M = !.M
+		true
 	).
 
 optimize_helper_map(M_in, M_out) :-
 	map.init(M0),
 	map.foldl((pred(K, V, M_cur, M) is det :-
 		(	K = num(N) ->
-			L = map.lookup(M_in, K)
+			L = map.lookup(M_in, K),
 			list.foldl((pred(SK, M_cur1, M1) is det :- 
 				map.set(M_cur1, SK, K, M1)
 				), L, M_cur, M)
 		;
 			M = M_cur
-		), M_in, M0, M_out).
+		), M_in, M0, M_out)).
 
 generate_solution_map_nd(!M, [], _).
 generate_solution_map_nd(!M, [D|DD], Numbers) :-
