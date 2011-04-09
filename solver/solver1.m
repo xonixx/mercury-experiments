@@ -34,8 +34,8 @@ problem1 = problem(
 	[
 		["Englishman", "Swedish", "Danish", "Norwegian", "German"],
 		["red", "green", "white", "yellow", "blue"],
-		["dog", "cat", "horse", "bird", "fish"],
-		["tea", "coffee", "milk", "beer", "water"],
+		["dog", "cat", "horse", "bird", "fish", "water"],
+		["tea", "coffee", "water", "milk", "beer", "water"],
 		["PallMall", "Dunhill", "Marlboro", "Winfield", "Rothmans"]
 	],
 	[
@@ -53,7 +53,7 @@ problem1 = problem(
 		eq(s("Winfield"),s("beer")),
 		near(s("Norwegian"),s("blue")),
 		eq(s("German"),s("Rothmans")),
-		near(s("Marlboro"),s("Water"))
+		near(s("Marlboro"),s("water"))
 	]).
 	
 :- type solution_result 
@@ -115,9 +115,11 @@ verify_domains([D | DD], !VerRes) :-
 	verify_domain(D, DD, !VerRes),
 	verify_domains(DD, !VerRes).
 	
+% inner	
 verify_domain([], V, V).
 verify_domain([E | EE], !VerRes) :-
-	verify_not_in_domain(E, EE, yes, !VerRes).
+	verify_not_in_domain(E, EE, yes, !VerRes),
+	verify_domain(EE, !VerRes).
 
 :- type verify_result == list(string).
 
@@ -148,6 +150,7 @@ verify_rules([R | RR], AllVars, !VerRes) :-
 
 verify_rule(Rule, AllVars, !VerRes) :-
 	extract(Rule) = VarNames,
+	%trace [io(!IO)] print({VarNames, AllVars}, !IO),
 	verify_rule_var_names(VarNames, AllVars, !VerRes).
 	
 verify_rule_var_names([], _, V, V).	
@@ -156,7 +159,8 @@ verify_rule_var_names([V|VV], AllVars, !VerRes) :-
 		ok(!VerRes)
 	;
 		add_error(V ++ ": unknown var in rule", !VerRes)
-	).
+	),
+	verify_rule_var_names(VV, AllVars, !VerRes).
 	
 
 write_errors(Errors, !IO) :- write_list(Errors, "\n", write_string, !IO).  
