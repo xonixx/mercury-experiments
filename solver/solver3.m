@@ -108,13 +108,14 @@ solution_nd(problem(_Name, Domains, Rules), SolutionMap) :-
 	length(det_head(Domains), L),
 	Numbers = 1 .. L,
 	
+	some [!HelperMap] (
 	map.init(!:HelperMap),
 	prepare_helper_map(Rules, !HelperMap),
 	optimize_helper_map(!HelperMap),
 	
 	map.init(SolutionMap0),
-	generate_solution_map_nd(SolutionMap0, SolutionMap, Domains, Numbers),
-	
+	generate_solution_map_nd(SolutionMap0, SolutionMap, Domains, Numbers)
+	),
 	%trace [io(!IO)] (print(SolutionMap, !IO), nl(!IO)),
 	
 	check_solution_map(SolutionMap, Rules).
@@ -137,7 +138,7 @@ helper_map_add(!M, S1, S2) :-
 	),
 	map.set(!.M, S1, L1, !:M).
 
-prepare_helper_map_rule(R, !M). :-
+prepare_helper_map_rule(R, !M) :-
 	(	R = eq(V1, V2) ->
 		(	(V1 = num(_), V2 = num(_)) -> 
 			error("prepare_helper_map_rule both are nums")
@@ -151,15 +152,14 @@ prepare_helper_map_rule(R, !M). :-
 
 optimize_helper_map(M_in, M_out) :-
 	map.init(M0),
-	map.foldl((pred(K, V, M_cur, M) is det :-
-		(	K = num(N) ->
-			L = map.lookup(M_in, K),
-			list.foldl((pred(SK, M_cur1, M1) is det :- 
+	map.foldl((pred(K::in, L::in, M_cur::in, M::out) is det:-
+		(	K = num(_) ->
+			list.foldl((pred(SK::in, M_cur1::in, M1::out) is det:- 
 				map.set(M_cur1, SK, K, M1)
 				), L, M_cur, M)
 		;
 			M = M_cur
-		), M_in, M0, M_out)).
+		)), M_in, M0, M_out).
 
 generate_solution_map_nd(!M, [], _).
 generate_solution_map_nd(!M, [D|DD], Numbers) :-
