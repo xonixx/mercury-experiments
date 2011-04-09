@@ -311,9 +311,27 @@ problem2 = problem("test",
 	]
 ).	
 
+problem3 = problem("test3",
+	[
+		["triangle", "diamond", "circle", "square"],
+		["green", "yellow", "blue", "red"]
+	],
+	[
+		near(str("red"), str("green")),
+		near(str("red"), str("blue")),
+		gt(str("diamond"), str("yellow")),
+		near(str("diamond"), str("yellow")),
+		gt(str("circle"), str("triangle")),
+		gt(str("circle"), str("diamond")),
+		gt(str("triangle"), num(1)),
+		lt(str("triangle"), num(4)),
+		not_near(str("blue"), str("yellow"))
+	]
+).	
+
 main(!IO) :-
-	solve(problem1, Solution),
-	%solve(problem2, Solution),
+	%solve(problem1, Solution),
+	solve(problem3, Solution),
 	(	Solution = solution_ok(SolutionOk),
 		print(SolutionOk, !IO)
 	;
