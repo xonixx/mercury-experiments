@@ -19,20 +19,18 @@
 :- type cigarettes ---> kools; chesterfields; winston; lucky_strike; parliaments.
 :- type drink ---> orange_juice; tea; coffee; milk; water.
 
-:- instance unifiable(house) where [
-	func(unify/2) is unify_houses
+:- instance unifiable_with_free(house) where [
+	unify(
+		house(N, C, P, S, D),
+		house(N1, C1, P1, S1, D1)) = 
+			house(unify(N, N1), unify(C, C1), unify(P, P1), unify(S, S1), unify(D, D1)),
+			
+	free_var = house(no,no,no,no,no)
 ].
 
-:- func unify_houses(house, house) = house is semidet.
-unify_houses(
-	house(N, C, P, S, D),
-	house(N1, C1, P1, S1, D1)) = 
-	house(unify(N, N1), unify(C, C1), unify(P, P1), unify(S, S1), unify(D, D1)).
-
-unknown_house = house(no,no,no,no,no).
+unknown_house = free_var.
 
 solve(!Street):-
-        %Street = [H1,H2,H3,H4,H5],
         % The Englishman lives in the red house
 	
 	logic.member(house(yes(englishman),yes(red),no,no,no), !Street),
