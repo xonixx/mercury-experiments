@@ -155,10 +155,10 @@ optimize_helper_map(M_in, M_out) :-
 	map.foldl((pred(K::in, L::in, M_cur::in, M::out) is det:-
 		(	K = num(_) ->
 			list.foldl((pred(SK::in, M_cur1::in, M1::out) is det:- 
-				map.set(M_cur1, SK, K, M1)
+				map.set(M_cur1, SK, [K], M1)
 				), L, M_cur, M)
 		;
-			M = M_cur
+			map.set(M_cur, K, L, M)
 		)), M_in, M0, M_out).
 
 generate_solution_map_nd(!M, [], _).
