@@ -129,6 +129,7 @@ solve_call(
 digits = [1,2,3,4,5,6,7,8,9].	
 	
 solve9(!A0,!A1,!A2,!A3,!A4,!A5,!A6,!A7,!A8) :-
+	dbg("Before", [!.A0,!.A1,!.A2,!.A3,!.A4,!.A5,!.A6,!.A7,!.A8]),
 	some [!D] (
 		!:D = digits,
 		take_one(!A0, !D),
@@ -140,10 +141,24 @@ solve9(!A0,!A1,!A2,!A3,!A4,!A5,!A6,!A7,!A8) :-
 		take_one(!A6, !D),
 		take_one(!A7, !D),
 		take_one(!A8, !.D, [])
-	).
+	),
+	dbg("After", [!:A0,!:A1,!:A2,!:A3,!:A4,!:A5,!:A6,!:A7,!:A8]).
 
 take_one(yes(N), yes(N), L, L1) :- delete(L, N, L1).
 take_one(no, yes(N), L, L1) :- delete(L, N, L1).
+
+dbg(Str, Args) :-
+	trace [io(!IO)] (
+		write_string(Str, !IO), 
+		write_string(" ",!IO)
+	), 
+	dbg(Args).
+	
+dbg(Args) :-
+	trace [io(!IO)] (
+		print(Args, !IO),
+		nl(!IO)
+	).
 
 main --> 
 	{P = problem_to_maybe(problem1)},

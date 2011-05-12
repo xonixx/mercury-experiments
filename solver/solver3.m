@@ -109,14 +109,14 @@ solution_nd(problem(_Name, Domains, Rules), SolutionMap) :-
 	Numbers = 1 .. L,
 	
 	some [!HelperMap] (
-	map.init(!:HelperMap),
-	prepare_helper_map(Rules, !HelperMap),
-	optimize_helper_map(!HelperMap),
-	
-	map.init(SolutionMap0),
-	generate_solution_map_nd(SolutionMap0, SolutionMap, Domains, Numbers)
+		map.init(!:HelperMap),
+		prepare_helper_map(Rules, !HelperMap),
+		optimize_helper_map(!HelperMap),
+		
+		map.init(SolutionMap0),
+		generate_solution_map_nd(SolutionMap0, SolutionMap, 
+			Domains, Numbers, !.HelperMap)
 	),
-	%trace [io(!IO)] (print(SolutionMap, !IO), nl(!IO)),
 	
 	check_solution_map(SolutionMap, Rules).
 	
@@ -161,16 +161,34 @@ optimize_helper_map(M_in, M_out) :-
 			map.set(M_cur, K, L, M)
 		)), M_in, M0, M_out).
 
-generate_solution_map_nd(!M, [], _).
-generate_solution_map_nd(!M, [D|DD], Numbers) :-
-	process_domain(!M, D, Numbers, []),
-	generate_solution_map_nd(!M, DD, Numbers).
+generate_solution_map_nd(!M, [], _, _).
+generate_solution_map_nd(!M, [D|DD], Numbers, HelperMap) :-
+	process_domain(!M, D, Numbers, [], HelperMap),
+	generate_solution_map_nd(!M, DD, Numbers, HelperMap).
 	
-process_domain(!M, [], !Numbers).	
-process_domain(M0, M, [E|EE], !Numbers) :-
+process_domain(!M, [], !Numbers, HelperMap).	
+process_domain(M0, M, [E|EE], !Numbers, HelperMap) :-
 	take_element(N, !Numbers),
+	check_num(N, E, HelperMap, M0),
 	map.det_insert(M0, E, N, M1),
 	process_domain(M1, M, EE, !Numbers).
+
+assert(B, S) :- (B -> true; error(S)).
+
+check_already_bound(_N, _E, [], _M).
+check_already_bound(N, E, [!!!], M).
+
+check_num(N, E, HelperMap, M) :-
+	(	map.search(HelperMap, str(E), L) ->
+		(	L = [num(N1)|T] ->
+			assert(T=[], "T is not []"),
+			N = N1
+		;
+			check_already_bound(N, E, L, M)
+		)
+	;
+		true
+	)
 
 t(S, T) :- 
 	trace [io(!IO)] (

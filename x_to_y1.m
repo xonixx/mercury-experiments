@@ -1,4 +1,4 @@
-:- module x_to_y.
+:- module x_to_y1.
 
 :- interface.
 
